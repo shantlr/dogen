@@ -2,14 +2,11 @@ import { DockerfileOp, DockerfileTarget } from './types';
 
 const formatOp = (op: DockerfileOp): string => {
   switch (op.type) {
-    case 'CMD': {
-      if (typeof op.cmd === 'string') {
-        return `CMD ${op.cmd}`;
-      }
-      return `CMD [${op.cmd.map((c) => `"${c}"`).join(',')}]`;
+    case 'WORKDIR': {
+      return `WORKDIR ${op.value}`;
     }
     case 'LABEL': {
-      return `LABEL "${op.name}"=${op.value}`;
+      return `LABEL ${op.name}=${op.value}`;
     }
     case 'EXPOSE': {
       return `EXPOSE ${op.port}${op.protocol ? `/${op.protocol}` : ''}`;
@@ -18,17 +15,35 @@ const formatOp = (op: DockerfileOp): string => {
       return `ENV ${op.name}=${op.value}`;
     }
     case 'COPY': {
-      return `COPY`;
+      const params = [];
+      if (typeof op.from === 'string') {
+        params.push(`--from=${op.from}`);
+      }
+
+      params.push(op.src);
+      if (op.dst) {
+        params.push(op.dst);
+      }
+      return `COPY ${params.join(' ')}`;
+    }
+    case 'CMD': {
+      if (typeof op.cmd === 'string') {
+        return `CMD ${op.cmd}`;
+      }
+      return `CMD [${op.cmd.map((c) => `"${c}"`).join(',')}]`;
     }
     case 'RUN': {
-      return `RUN`;
+      if (typeof op.cmd === 'string') {
+        return `RUN ${op.cmd}`;
+      }
+      return `RUN [${op.cmd.map((c) => `"${c}"`).join(',')}]`;
     }
     default:
   }
   throw new Error(`Unknown dockerfile op: ${JSON.stringify(op)}`);
 };
 
-const generateDockerfileTarget = (target: DockerfileTarget) => {
+const formatDockerfileTarget = (target: DockerfileTarget) => {
   const res: string[] = [
     `FROM ${target.from} AS ${target.as}`,
     ...target.ops.map((o) => formatOp(o)),
@@ -37,6 +52,6 @@ const generateDockerfileTarget = (target: DockerfileTarget) => {
   return res.join('\n');
 };
 
-export const generateDockerfile = (targets: DockerfileTarget[]): string => {
-  return targets.map((t) => generateDockerfileTarget(t)).join('\n\n');
+export const formatDockerfile = (targets: DockerfileTarget[]): string => {
+  return targets.map((t) => formatDockerfileTarget(t)).join('\n\n');
 };
