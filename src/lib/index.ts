@@ -1,9 +1,10 @@
 import path from 'path';
-import { PackageJson } from './packageJson';
-import { readdir, stat } from 'fs/promises';
+import { PackageJson, findPackageJson } from './packageJson';
+import { readdir, stat, writeFile } from 'fs/promises';
 import { buildNodeService } from '..';
+import { formatDockerfile } from './dockerfile';
 
-export const detectBuildFiles = async (dir: string) => {
+const detectBuildFiles = async (dir: string) => {
   const files = await readdir(dir, { withFileTypes: true });
   const res: string[] = [];
 
@@ -21,8 +22,9 @@ export const detectBuildFiles = async (dir: string) => {
   return res;
 };
 
-export const detectPackageManager = async (dir: string) => {
+const detectPackageManager = async (dir: string) => {
   try {
+    console.log(dir, 'yarn.lock');
     await stat(path.resolve(dir, 'yarn.lock'));
     return {
       packageManager: 'yarn',
@@ -57,13 +59,18 @@ export const detectPackageManager = async (dir: string) => {
   throw new Error(`Unable to detect used package manager`);
 };
 
-export const createTargetsFromPackageJson = async ({
+const createDockerfileTargetsFromPackageJson = async ({
   packageJson,
-  packageJsonPath,
+  projectDir,
 }: {
   packageJson: PackageJson;
-  packageJsonPath: string;
+  projectDir: string;
 }) => {
+  const { install, packageManager, runScriptCmd } = await detectPackageManager(
+    projectDir
+  );
+
+  // Build static html that is served using nginx
   if (
     packageJson.dependencies?.['react-scripts'] ||
     packageJson.devDependencies?.['react-scripts']
@@ -71,6 +78,7 @@ export const createTargetsFromPackageJson = async ({
     //
   }
 
+  // Puppeteer require specific base image
   if (
     packageJson.dependencies?.['puppeteer'] ||
     packageJson.devDependencies?.['puppeteer']
@@ -78,17 +86,12 @@ export const createTargetsFromPackageJson = async ({
     //
   }
 
-  const projectDir = path.parse(packageJsonPath).dir;
-
   const buildFiles = await detectBuildFiles(projectDir);
-  const { install, packageManager, runScriptCmd } = await detectPackageManager(
-    projectDir
-  );
 
-  await buildNodeService({
+  return buildNodeService({
     packageJson,
-    packageJsonPath,
-    dockerfilePath: path.resolve(path.parse(packageJsonPath).dir, 'Dockerfile'),
+    projectDir,
+    dockerfilePath: path.resolve(projectDir, 'Dockerfile'),
     config: {
       baseNodeImage: 'node:latest',
       install,
@@ -100,5 +103,22 @@ export const createTargetsFromPackageJson = async ({
       runCmd: `node ./build/index.js`,
     },
   });
-  //
+};
+
+export const generateDockerfile = async ({
+  dir = process.cwd(),
+}: {
+  dir?: string;
+}) => {
+  const { dir: projectDir, packageJson } = await findPackageJson(
+    dir,
+    (process.env.HOME as string) ?? '/'
+  );
+
+  const { targets } = await createDockerfileTargetsFromPackageJson({
+    packageJson,
+    projectDir,
+  });
+  const dockerfile = formatDockerfile(targets);
+  await writeFile(path.resolve(projectDir, 'Dockerfile'), dockerfile);
 };

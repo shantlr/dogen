@@ -12,12 +12,12 @@ const formatTargetName = (name: string) => {
  */
 export const buildNodeService = ({
   packageJson,
-  packageJsonPath,
+  projectDir,
   dockerfilePath,
   config,
 }: {
   packageJson: PackageJson;
-  packageJsonPath: string;
+  projectDir: string;
   dockerfilePath: string;
   config: {
     workdir: string;
@@ -63,7 +63,7 @@ export const buildNodeService = ({
     ops: [
       {
         type: 'COPY',
-        src: path.relative(dockerfilePath, packageJsonPath),
+        src: path.relative(dockerfilePath, projectDir),
         dst: `/tmp/package.json`,
       },
       {
