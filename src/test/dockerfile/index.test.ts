@@ -142,6 +142,24 @@ COPY --from=common /app/package.json package.json`);
     ).toBe(`FROM alpine:3.18 AS app
 EXPOSE 3000`);
   });
+  it('should format expose udp', () => {
+    expect(
+      formatDockerfile([
+        {
+          from: 'alpine:3.18',
+          as: 'app',
+          ops: [
+            {
+              type: 'EXPOSE',
+              port: 80,
+              protocol: 'udp',
+            },
+          ],
+        },
+      ])
+    ).toBe(`FROM alpine:3.18 AS app
+EXPOSE 80/udp`);
+  });
   it('should format cmd', () => {
     expect(
       formatDockerfile([
