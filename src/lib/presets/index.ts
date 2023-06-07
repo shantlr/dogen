@@ -57,13 +57,13 @@ export const buildNodeService = ({
   };
 
   const extractPackageJsonDepsTarget: DockerfileTarget = {
-    from: JQ_PRESETS.as,
+    from: JQ_PRESETS,
     as: `${asPrefix}${pkgName}_extract-deps`,
     comment: `Strip package.json and only keep fields used for installing node_modules`,
     ops: [
       {
         type: 'COPY',
-        src: path.relative(dockerfilePath, projectDir),
+        src: 'package.json',
         dst: `/tmp/package.json`,
       },
       {
@@ -74,7 +74,7 @@ export const buildNodeService = ({
   };
 
   const installTarget: DockerfileTarget = {
-    from: nodeBaseTarget.as,
+    from: nodeBaseTarget,
     as: `${asPrefix}${pkgName}_install-deps`,
     comment: `Install ${packageJson.name} node_modules`,
     ops: [
@@ -91,7 +91,7 @@ export const buildNodeService = ({
       ...config.install.files.map(
         (f): DockerfileOp => ({
           type: 'COPY',
-          src: Array.isArray(f) ? f[0] : f,
+          src: path.relative(projectDir, Array.isArray(f) ? f[0] : f),
           dst: Array.isArray(f) ? f[1] : null,
         })
       ),
@@ -103,7 +103,7 @@ export const buildNodeService = ({
   };
 
   const buildTarget: DockerfileTarget = {
-    from: installTarget.as,
+    from: nodeBaseTarget,
     as: `${asPrefix}${pkgName}_build`,
     comment: `Build ${packageJson.name}`,
     ops: [
@@ -116,6 +116,10 @@ export const buildNodeService = ({
         from: installTarget.as,
         src: `${workdir}/node_modules`,
         dst: 'node_modules',
+      },
+      {
+        type: 'COPY',
+        src: 'package.json',
       },
       ...config.build.files.map(
         (f): DockerfileOp => ({

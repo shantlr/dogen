@@ -1,5 +1,5 @@
 export type DockerfileTarget = {
-  from: string;
+  from: string | DockerfileTarget;
   as: string;
   comment?: string;
   ops: DockerfileOp[];

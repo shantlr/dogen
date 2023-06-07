@@ -24,7 +24,6 @@ const detectBuildFiles = async (dir: string) => {
 
 const detectPackageManager = async (dir: string) => {
   try {
-    console.log(dir, 'yarn.lock');
     await stat(path.resolve(dir, 'yarn.lock'));
     return {
       packageManager: 'yarn',

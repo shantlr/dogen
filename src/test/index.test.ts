@@ -13,6 +13,7 @@ describe('test', () => {
     const packageJson = {
       name: 'express-server',
       version: '1.0.0',
+      main: 'build/index.js',
     };
     vol.fromJSON(
       {
@@ -33,18 +34,19 @@ RUN apk add --update --no-cache jq
 FROM node:latest AS node-base
 
 FROM jq AS express-server_extract-deps
-COPY .. /tmp/package.json
+COPY package.json /tmp/package.json
 RUN jq '{name, dependencies, devDependencies}' < /tmp/package.json > /tmp/deps.json
 
 FROM node-base AS express-server_install-deps
 WORKDIR /app
 COPY --from=express-server_extract-deps /tmp/deps.json package.json
-COPY /service/yarn.lock
+COPY yarn.lock
 RUN yarn install
 
-FROM express-server_install-deps AS express-server_build
+FROM node-base AS express-server_build
 WORKDIR /app
 COPY --from=express-server_install-deps /app/node_modules node_modules
+COPY package.json
 CMD yarn build
 
 FROM express-server_build AS express-server

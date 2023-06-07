@@ -45,7 +45,9 @@ const formatOp = (op: DockerfileOp): string => {
 
 const formatDockerfileTarget = (target: DockerfileTarget) => {
   const res: string[] = [
-    `FROM ${target.from} AS ${target.as}`,
+    `FROM ${
+      typeof target.from === 'string' ? target.from : target.from.as
+    } AS ${target.as}`,
     ...target.ops.map((o) => formatOp(o)),
   ];
 
