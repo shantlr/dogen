@@ -1,6 +1,6 @@
 {
   "name": "dogen",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "./build/main/index.js",
   "repository": "git@github.com:shantlr/dogen.git",
   "author": "Patrick <shantry@hotmail.fr>",
