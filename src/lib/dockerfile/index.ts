@@ -23,6 +23,8 @@ const formatOp = (op: DockerfileOp): string => {
       params.push(op.src);
       if (op.dst) {
         params.push(op.dst);
+      } else {
+        params.push(op.src);
       }
       return `COPY ${params.join(' ')}`;
     }

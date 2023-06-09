@@ -4,12 +4,12 @@ import { readFile } from 'fs/promises';
 
 jest.mock('fs/promises');
 
-describe('test', () => {
+describe('generateDockerfile', () => {
   beforeEach(() => {
     vol.reset();
   });
 
-  it('should', async () => {
+  it('should generate Dockerfile for service using yarn', async () => {
     const packageJson = {
       name: 'express-server',
       version: '1.0.0',

@@ -15,9 +15,11 @@
     "src"
   ],
   "scripts": {
-    "prepare": "tsc -p tsconfig.build.json"
+    "prepare": "tsc -p tsconfig.build.json",
+    "cli": "ts-node src/cli/index.ts"
   },
   "dependencies": {
+    "commander": "^10.0.1",
     "lodash": "^4.17.21"
   },
   "devDependencies": {

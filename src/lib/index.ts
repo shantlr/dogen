@@ -1,8 +1,9 @@
 import path from 'path';
 import { PackageJson, findPackageJson } from './packageJson';
-import { readdir, stat, writeFile } from 'fs/promises';
+import { appendFile, readdir, stat, writeFile } from 'fs/promises';
 import { buildNodeService } from '..';
 import { formatDockerfile } from './dockerfile';
+import { isFileExists } from './utils';
 
 const detectBuildFiles = async (dir: string) => {
   const files = await readdir(dir, { withFileTypes: true });
@@ -13,7 +14,7 @@ const detectBuildFiles = async (dir: string) => {
       case 'src':
       case 'tsconfig.json':
       case '.babelrc': {
-        res.push(path.resolve(dir, file.name));
+        res.push(file.name);
         break;
       }
       default:
@@ -30,7 +31,7 @@ const detectPackageManager = async (dir: string) => {
       runScriptCmd: `yarn`,
       install: {
         files: [path.resolve(dir, 'yarn.lock')],
-        cmd: 'yarn install',
+        cmd: 'yarn install --frozen-lockfile --no-cache',
       },
     };
   } catch (err) {
@@ -106,8 +107,10 @@ const createDockerfileTargetsFromPackageJson = async ({
 
 export const generateDockerfile = async ({
   dir = process.cwd(),
+  conflict,
 }: {
   dir?: string;
+  conflict?: 'overwrite' | 'append';
 }) => {
   const { dir: projectDir, packageJson } = await findPackageJson(
     dir,
@@ -119,5 +122,30 @@ export const generateDockerfile = async ({
     projectDir,
   });
   const dockerfile = formatDockerfile(targets);
-  await writeFile(path.resolve(projectDir, 'Dockerfile'), dockerfile);
+
+  let state: 'created' | 'updated';
+
+  const dockerfilePath = path.resolve(projectDir, 'Dockerfile');
+  const alreadyExists = isFileExists(dockerfilePath);
+
+  const content = `#dogen\n${dockerfile}\n#enddogen\n`;
+
+  if (!alreadyExists || conflict === 'overwrite') {
+    await writeFile(dockerfilePath, content);
+    if (alreadyExists) {
+      state = 'updated';
+    } else {
+      state = 'created';
+    }
+  } else if (conflict === 'append') {
+    state = 'updated';
+    await appendFile(dockerfilePath, `\n${content}`);
+  } else {
+    throw new Error(`DOCKERFILE_ALREADY_EXISTS`);
+  }
+
+  return {
+    state,
+    dockerfilePath,
+  };
 };
