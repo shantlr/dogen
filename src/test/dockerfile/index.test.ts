@@ -41,8 +41,8 @@ describe('dockerfile', () => {
       ])
     ).toBe(`FROM node:18 AS app
 WORKDIR /app
-COPY package.json
-COPY yarn.lock
+COPY package.json package.json
+COPY yarn.lock yarn.lock
 RUN yarn install`);
   });
 
@@ -97,7 +97,7 @@ LABEL name=service`);
         },
       ])
     ).toBe(`FROM alpine:3.18 AS app
-COPY package.json`);
+COPY package.json package.json`);
   });
   it('should format copy from', () => {
     expect(

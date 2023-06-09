@@ -9,7 +9,7 @@ describe('generateDockerfile', () => {
     vol.reset();
   });
 
-  it('should generate Dockerfile for service using yarn', async () => {
+  it.only('should generate Dockerfile for service using yarn', async () => {
     const packageJson = {
       name: 'express-server',
       version: '1.0.0',
@@ -28,7 +28,8 @@ describe('generateDockerfile', () => {
     });
     const dockerfile = (await readFile('/service/Dockerfile')).toString();
 
-    expect(dockerfile).toBe(`FROM alpine:3.12 AS jq
+    expect(dockerfile).toBe(`#dogen
+FROM alpine:3.12 AS jq
 RUN apk add --update --no-cache jq
 
 FROM node:latest AS node-base
@@ -40,16 +41,18 @@ RUN jq '{name, dependencies, devDependencies}' < /tmp/package.json > /tmp/deps.j
 FROM node-base AS express-server_install-deps
 WORKDIR /app
 COPY --from=express-server_extract-deps /tmp/deps.json package.json
-COPY yarn.lock
-RUN yarn install
+COPY yarn.lock yarn.lock
+RUN yarn install --frozen-lockfile --no-cache
 
 FROM node-base AS express-server_build
 WORKDIR /app
 COPY --from=express-server_install-deps /app/node_modules node_modules
-COPY package.json
+COPY package.json package.json
 CMD yarn build
 
 FROM express-server_build AS express-server
-CMD node ./build/index.js`);
+CMD node ./build/index.js
+#enddogen
+`);
   });
 });

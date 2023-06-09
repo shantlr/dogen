@@ -126,7 +126,7 @@ export const generateDockerfile = async ({
   let state: 'created' | 'updated';
 
   const dockerfilePath = path.resolve(projectDir, 'Dockerfile');
-  const alreadyExists = isFileExists(dockerfilePath);
+  const alreadyExists = await isFileExists(dockerfilePath);
 
   const content = `#dogen\n${dockerfile}\n#enddogen\n`;
 
