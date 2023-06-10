@@ -23,7 +23,7 @@ const assertDogenConfig = (content: DogenInputConfig) => {
   };
 };
 
-const parseDogenConfig = (str: string) => {
+export const parseDogenConfig = (str: string) => {
   const content = JSON.parse(str);
   const { warnings } = assertDogenConfig(content);
   return {

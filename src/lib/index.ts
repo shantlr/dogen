@@ -151,6 +151,7 @@ const createDockerfileTargetsFromPackageJson = async ({
 export const generateDockerfile = async ({
   dir = process.cwd(),
   conflict,
+  config: customConfig,
   mapConfig = (config): DogenResolvedConfig => ({
     ...(config || null),
     nodeImage: config?.nodeImage || 'node:latest',
@@ -159,6 +160,10 @@ export const generateDockerfile = async ({
 }: {
   dir?: string;
   conflict?: 'overwrite' | 'append';
+  /**
+   * If not provided, will try to autodetect it
+   */
+  config?: DogenInputConfig;
   mapConfig?: (
     detectedConfig: DogenInputConfig | null
   ) => DogenResolvedConfig | Promise<DogenResolvedConfig>;
@@ -168,10 +173,16 @@ export const generateDockerfile = async ({
     (process.env.HOME as string) ?? '/'
   );
 
-  const { config: inputConfig, warnings } = await detectDogenConfig(projectDir);
-  if (warnings.length) {
-    console.log(warnings.map((w) => `WARN: ${w}`).join('\n'));
+  let inputConfig = customConfig;
+  //#region Autodetect config if not provided
+  if (!inputConfig) {
+    const { config, warnings } = await detectDogenConfig(projectDir);
+    inputConfig = config;
+    if (warnings.length) {
+      console.log(warnings.map((w) => `WARN: ${w}`).join('\n'));
+    }
   }
+  //#endregion
 
   const config = await mapConfig(inputConfig);
 
@@ -182,9 +193,9 @@ export const generateDockerfile = async ({
   });
   const dockerfile = formatDockerfile(targets);
 
-  let state: 'created' | 'updated';
+  let operation: 'created' | 'updated';
 
-  //#region Write/Append
+  //#region Write/Append Dockerfile
   const dockerfilePath = path.resolve(projectDir, 'Dockerfile');
   const alreadyExists = await isFileExists(dockerfilePath);
 
@@ -193,12 +204,12 @@ export const generateDockerfile = async ({
   if (!alreadyExists || conflict === 'overwrite') {
     await writeFile(dockerfilePath, content);
     if (alreadyExists) {
-      state = 'updated';
+      operation = 'updated';
     } else {
-      state = 'created';
+      operation = 'created';
     }
   } else if (conflict === 'append') {
-    state = 'updated';
+    operation = 'updated';
     await appendFile(dockerfilePath, `\n${content}`);
   } else {
     throw new Error(`DOCKERFILE_ALREADY_EXISTS`);
@@ -206,7 +217,7 @@ export const generateDockerfile = async ({
   //#endregion
 
   return {
-    state,
+    operation,
     dockerfilePath,
   };
 };

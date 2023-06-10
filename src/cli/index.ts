@@ -1,11 +1,13 @@
 import { Command } from 'commander';
 import { generateDockerfile } from '../lib';
+import { isFileExists } from '../lib/utils';
+import { parseDogenConfig } from '../lib/dogenConfig';
 
 const main = async () => {
   const prog = new Command();
 
   prog
-    .command('gen', {
+    .command('gen [config-path]', {
       isDefault: true,
     })
     .description(`generate Dockerfile (default command)`)
@@ -13,12 +15,26 @@ const main = async () => {
       '-w, --wizard',
       'Start with wizard, this is activated by default when no configuration is detected'
     )
-    .action(async () => {
+    .action(async (configPath?: string) => {
       try {
-        const { state, dockerfilePath } = await generateDockerfile({
+        if (configPath && !(await isFileExists(configPath))) {
+          console.warn(`config does not exists at '${configPath}'`);
+          process.exit(1);
+        }
+
+        //#region Parse provided config
+        const { config, warnings: configWarnings } =
+          parseDogenConfig(configPath);
+        if (configWarnings.length) {
+          console.warn(configWarnings.map((c) => `WARN: ${c}`).join('\n'));
+        }
+        //#endregion
+
+        const { operation, dockerfilePath } = await generateDockerfile({
           conflict: 'append',
+          config,
         });
-        console.log(`Dockerfile ${state} at ${dockerfilePath}`);
+        console.log(`Dockerfile ${operation} at ${dockerfilePath}`);
       } catch (err) {
         switch (err?.message) {
           case 'DOCKERFILE_ALREADY_EXISTS': {
