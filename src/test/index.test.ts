@@ -9,7 +9,7 @@ describe('generateDockerfile', () => {
     vol.reset();
   });
 
-  it.only('should generate Dockerfile for service using yarn', async () => {
+  it('should generate Dockerfile for service using yarn', async () => {
     const packageJson = {
       name: 'express-server',
       version: '1.0.0',
@@ -54,5 +54,9 @@ FROM express-server_build AS express-server
 CMD node ./build/index.js
 #enddogen
 `);
+  });
+
+  it('should detect config file', async () => {
+    //
   });
 });
