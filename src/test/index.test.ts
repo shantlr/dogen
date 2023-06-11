@@ -32,18 +32,22 @@ describe('generateDockerfile', () => {
 FROM alpine:3.12 AS jq
 RUN apk add --update --no-cache jq
 
+# Base image that will be used for installing / running service
 FROM node:latest AS node-base
 
+# Strip package.json and only keep fields used for installing node_modules
 FROM jq AS express-server_extract-deps
 COPY package.json /tmp/package.json
 RUN jq '{name, dependencies, devDependencies}' < /tmp/package.json > /tmp/deps.json
 
+# Install express-server node_modules
 FROM node-base AS express-server_install-deps
 WORKDIR /app
 COPY --from=express-server_extract-deps /tmp/deps.json package.json
 COPY yarn.lock yarn.lock
 RUN yarn install --frozen-lockfile --no-cache
 
+# Build express-server
 FROM node-base AS express-server_build
 WORKDIR /app
 COPY --from=express-server_install-deps /app/node_modules node_modules

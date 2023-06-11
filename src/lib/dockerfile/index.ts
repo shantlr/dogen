@@ -47,12 +47,18 @@ const formatOp = (op: DockerfileOp): string => {
 };
 
 const formatDockerfileTarget = (target: DockerfileTarget) => {
-  const res: string[] = [
+  const res: string[] = [];
+
+  if (target.comment) {
+    res.push(`# ${target.comment}`);
+  }
+
+  res.push(
     `FROM ${
       typeof target.from === 'string' ? target.from : target.from.as
     } AS ${target.as}`,
-    ...target.ops.map((o) => formatOp(o)),
-  ];
+    ...target.ops.map((o) => formatOp(o))
+  );
 
   return res.join('\n');
 };
