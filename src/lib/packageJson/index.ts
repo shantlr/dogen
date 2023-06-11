@@ -5,6 +5,7 @@ import { isFileExists } from '../utils';
 export interface PackageJson {
   name: string;
   version: string;
+  main?: string;
 
   scripts?: Record<string, string>;
 

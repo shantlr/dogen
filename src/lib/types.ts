@@ -10,6 +10,9 @@ export type DogenInputConfig = {
     workdir?: string;
   };
 
+  install?: {
+    keepCache?: boolean;
+  };
   build?: {
     /**
      * package.json script to call for building service
@@ -51,7 +54,7 @@ export type DogenInputConfig = {
 
 export type DogenResolvedConfig = Pick<
   DogenInputConfig,
-  'run' | 'build' | 'postBuild'
+  'run' | 'build' | 'postBuild' | 'install'
 > & {
   nodeImage: string;
   container: {

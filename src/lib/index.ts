@@ -3,7 +3,7 @@ import { PackageJson, findPackageJson } from './packageJson';
 import { appendFile, readdir, stat, writeFile } from 'fs/promises';
 import { buildNodeService } from './presets';
 import { formatDockerfile } from './dockerfile';
-import { isFileExists } from './utils';
+import { StringOrDeepStringArray, flatJoin, isFileExists } from './utils';
 import { detectDogenConfig } from './dogenConfig';
 import { DogenInputConfig, DogenResolvedConfig } from './types';
 
@@ -58,15 +58,24 @@ const detectBuildFiles = async (dir: string, config: DogenResolvedConfig) => {
   return res;
 };
 
-const detectPackageManager = async (dir: string) => {
+const detectPackageManager = async (
+  dir: string,
+  config: DogenResolvedConfig
+) => {
   try {
     await stat(path.resolve(dir, 'yarn.lock'));
+    const installOpts = ['--pure-lockfile', '--non-interactive'];
+    const cmds: StringOrDeepStringArray = [['yarn install', installOpts]];
+    if (config.install?.keepCache !== true) {
+      installOpts.push(`--cache-folder ./.ycache`);
+      cmds.push(`&& rm -rf ./.ycache`);
+    }
     return {
       packageManager: 'yarn',
       runScriptCmd: `yarn`,
       install: {
         files: [path.resolve(dir, 'yarn.lock')],
-        cmd: 'yarn install --frozen-lockfile --no-cache',
+        cmd: flatJoin(cmds, ' '),
       },
     };
   } catch (err) {
@@ -104,7 +113,8 @@ const createDockerfileTargetsFromPackageJson = async ({
   config: DogenResolvedConfig;
 }) => {
   const { install, packageManager, runScriptCmd } = await detectPackageManager(
-    projectDir
+    projectDir,
+    config
   );
 
   // Build static html that is served using nginx
@@ -135,9 +145,11 @@ const createDockerfileTargetsFromPackageJson = async ({
       build: {
         files: buildFiles,
         cmd:
-          config.build?.cmd ?? config.build?.script
-            ? `${runScriptCmd} ${config.build.script}`
-            : `${runScriptCmd} build`,
+          config.build?.cmd ||
+          (config.build?.script && `${runScriptCmd} ${config.build.script}`) ||
+          (packageJson.scripts?.['build:prod'] &&
+            `${runScriptCmd} build:prod`) ||
+          `${runScriptCmd} build`,
       },
       postBuild: {
         files:
@@ -147,9 +159,10 @@ const createDockerfileTargetsFromPackageJson = async ({
       },
       workdir: config.container.workdir,
       runCmd:
-        config.run?.cmd ?? config.run?.script
-          ? `${runScriptCmd} ${config.run.script}`
-          : `node ./build/index.js`,
+        config.run?.cmd ||
+        (config.run?.script && `${runScriptCmd} ${config.run?.script}`) ||
+        (packageJson.main && `node ${packageJson.main}`) ||
+        'node ./build/index.js',
     },
   });
 };

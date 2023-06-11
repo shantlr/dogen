@@ -14,3 +14,16 @@ export const isFileExists = async (filePath: string) => {
     throw err;
   }
 };
+
+export type StringOrDeepStringArray =
+  | string
+  | string[]
+  | StringOrDeepStringArray[];
+export const flatJoin = (value: StringOrDeepStringArray, sep: string) => {
+  if (typeof value === 'string') {
+    return value;
+  }
+  return value
+    .map((v: string | StringOrDeepStringArray) => flatJoin(v, sep))
+    .join(sep);
+};
