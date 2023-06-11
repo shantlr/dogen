@@ -3,7 +3,7 @@ import { PackageJson, findPackageJson } from './packageJson';
 import { appendFile, readdir, stat, writeFile } from 'fs/promises';
 import { buildNodeService } from './presets';
 import { formatDockerfile } from './dockerfile';
-import { StringOrDeepStringArray, flatJoin, isFileExists } from './utils';
+import { StringOrDeepStringArray, fcmd, flatJoin, isFileExists } from './utils';
 import { detectDogenConfig } from './dogenConfig';
 import { DogenInputConfig, DogenResolvedConfig } from './types';
 
@@ -138,7 +138,6 @@ const createDockerfileTargetsFromPackageJson = async ({
   return buildNodeService({
     packageJson,
     projectDir,
-    dockerfilePath: path.resolve(projectDir, 'Dockerfile'),
     config: {
       baseNodeImage: config.nodeImage,
       install,
@@ -146,9 +145,9 @@ const createDockerfileTargetsFromPackageJson = async ({
         files: buildFiles,
         cmd:
           config.build?.cmd ||
-          (config.build?.script && `${runScriptCmd} ${config.build.script}`) ||
+          fcmd`${runScriptCmd} ${config.build?.script}` ||
           (packageJson.scripts?.['build:prod'] &&
-            `${runScriptCmd} build:prod`) ||
+            `${runScriptCmd} ${'build:prod'}`) ||
           `${runScriptCmd} build`,
       },
       postBuild: {
@@ -160,8 +159,8 @@ const createDockerfileTargetsFromPackageJson = async ({
       workdir: config.container.workdir,
       runCmd:
         config.run?.cmd ||
-        (config.run?.script && `${runScriptCmd} ${config.run?.script}`) ||
-        (packageJson.main && `node ${packageJson.main}`) ||
+        fcmd`${runScriptCmd} ${config.run?.script}` ||
+        fcmd`node ${packageJson.main}` ||
         'node ./build/index.js',
     },
   });

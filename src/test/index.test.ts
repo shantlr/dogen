@@ -55,7 +55,7 @@ COPY package.json package.json
 CMD yarn build
 
 FROM express-server_build AS express-server
-CMD node build/index.js
+CMD node ./build/index.js
 #enddogen
 `);
   });

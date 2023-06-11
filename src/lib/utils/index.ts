@@ -27,3 +27,29 @@ export const flatJoin = (value: StringOrDeepStringArray, sep: string) => {
     .map((v: string | StringOrDeepStringArray) => flatJoin(v, sep))
     .join(sep);
 };
+
+/**
+ * Format command string, if any values is falsy, returned value will be null
+ * Can be used to
+ */
+export function fcmd(str: string): string | null;
+export function fcmd(
+  str: TemplateStringsArray,
+  ...values: (null | undefined | false | string | number | Date)[]
+): string | null;
+export function fcmd(strs, ...values) {
+  if (typeof strs === 'string') {
+    return strs;
+  }
+
+  let res: string = strs;
+
+  for (let i = 0; i < strs.length; i += 1) {
+    if (!values[i]) {
+      return null;
+    }
+    res += strs[i];
+    res += values[i];
+  }
+  return res;
+}
