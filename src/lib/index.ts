@@ -139,6 +139,12 @@ const createDockerfileTargetsFromPackageJson = async ({
             ? `${runScriptCmd} ${config.build.script}`
             : `${runScriptCmd} build`,
       },
+      postBuild: {
+        files:
+          typeof config.postBuild?.includes === 'string'
+            ? [config.postBuild?.includes]
+            : config.postBuild?.includes || [],
+      },
       workdir: config.container.workdir,
       runCmd:
         config.run?.cmd ?? config.run?.script

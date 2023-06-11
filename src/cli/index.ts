@@ -14,7 +14,7 @@ const cli = async (argv = process.argv) => {
     .description(`generate Dockerfile (default command)`)
     .option(
       '-w, --wizard',
-      'Start with wizard, this is activated by default when no configuration is detected'
+      'Start with wizard, this is activated by default when no configuration is provided or detected'
     )
     .action(async (configPath?: string) => {
       try {

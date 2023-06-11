@@ -1,3 +1,4 @@
+import path from 'path';
 import { DockerfileOp, DockerfileTarget } from './types';
 
 const formatOp = (op: DockerfileOp): string => {
@@ -58,4 +59,17 @@ const formatDockerfileTarget = (target: DockerfileTarget) => {
 
 export const formatDockerfile = (targets: DockerfileTarget[]): string => {
   return targets.map((t) => formatDockerfileTarget(t)).join('\n\n');
+};
+
+export const copy = (
+  p: string | [string, string],
+  fromPath?: string
+): DockerfileOp & { type: 'COPY' } => {
+  const src = Array.isArray(p) ? p[0] : p;
+
+  return {
+    type: 'COPY',
+    src: fromPath ? path.relative(fromPath, src) : src,
+    dst: Array.isArray(p) ? p[1] : undefined,
+  };
 };

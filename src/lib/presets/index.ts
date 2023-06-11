@@ -2,6 +2,7 @@ import path from 'path';
 import { JQ_PRESETS } from '../dockerfile/presets';
 import { DockerfileOp, DockerfileTarget } from '../dockerfile/types';
 import { PackageJson } from '../packageJson';
+import { copy } from '../dockerfile';
 
 const formatTargetName = (name: string) => {
   return name.replace(/@/g, '_');
@@ -41,6 +42,9 @@ export const buildNodeService = ({
        * @example yarn build
        */
       cmd: string | string[];
+    };
+    postBuild: {
+      files: string[];
     };
     runCmd: string | string[];
   };
@@ -88,13 +92,7 @@ export const buildNodeService = ({
         src: `/tmp/deps.json`,
         dst: `package.json`,
       },
-      ...config.install.files.map(
-        (f): DockerfileOp => ({
-          type: 'COPY',
-          src: path.relative(projectDir, Array.isArray(f) ? f[0] : f),
-          dst: Array.isArray(f) ? f[1] : null,
-        })
-      ),
+      ...config.install.files.map((f): DockerfileOp => copy(f, projectDir)),
       {
         type: 'RUN',
         cmd: config.install.cmd,
@@ -121,19 +119,19 @@ export const buildNodeService = ({
         type: 'COPY',
         src: 'package.json',
       },
-      ...config.build.files.map(
-        (f): DockerfileOp => ({
-          type: 'COPY',
-          src: Array.isArray(f) ? f[0] : f,
-          dst: Array.isArray(f) ? f[1] : null,
-        })
-      ),
+      ...config.build.files.map((f): DockerfileOp => copy(f, projectDir)),
       {
         type: 'CMD',
         cmd: `${config.build.cmd}`,
       },
     ],
   };
+
+  if (config.postBuild.files.length) {
+    buildTarget.ops.push(
+      ...config.postBuild.files.map((f) => copy(f, projectDir))
+    );
+  }
 
   const runTarget: DockerfileTarget = {
     from: buildTarget.as,
