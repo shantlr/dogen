@@ -139,7 +139,7 @@ const createDockerfileTargetsFromPackageJson = async ({
             ? `${runScriptCmd} ${config.build.script}`
             : `${runScriptCmd} build`,
       },
-      workdir: config.containerWorkdir,
+      workdir: config.container.workdir,
       runCmd:
         config.run?.cmd ?? config.run?.script
           ? `${runScriptCmd} ${config.run.script}`
@@ -155,7 +155,10 @@ export const generateDockerfile = async ({
   mapConfig = (config): DogenResolvedConfig => ({
     ...(config || null),
     nodeImage: config?.nodeImage || 'node:latest',
-    containerWorkdir: config?.containerWorkdir || '/app',
+    container: {
+      ...(config?.container || null),
+      workdir: config?.container?.workdir || '/app',
+    },
   }),
 }: {
   dir?: string;

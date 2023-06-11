@@ -1,3 +1,4 @@
 #! /usr/bin/env node
 
-require('../build/main/index.js');
+const cli = require('../build/main/index.js');
+cli();

@@ -2,10 +2,13 @@ export type DogenInputConfig = {
   root?: boolean;
 
   nodeImage?: string;
+
   /**
    * Workdir to use in dockerfile
    */
-  containerWorkdir?: string;
+  container: {
+    workdir?: string;
+  };
 
   build?: {
     /**
@@ -51,5 +54,7 @@ export type DogenResolvedConfig = Pick<
   'run' | 'build' | 'postBuild'
 > & {
   nodeImage: string;
-  containerWorkdir: string;
+  container: {
+    workdir: string;
+  };
 };

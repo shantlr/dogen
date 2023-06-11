@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "prepare": "tsc -p tsconfig.build.json",
-    "cli": "ts-node src/cli/index.ts"
+    "cli": "ts-node -e \"import cli from './src/cli/index'; cli(['ts-node', 'dogen', ...process.argv.slice(1)])\" --"
   },
   "dependencies": {
     "commander": "^10.0.1",

@@ -31,13 +31,16 @@ export const parseDogenConfig = (str: string) => {
     warnings,
   };
 };
+export const parseDogenConfigFile = async (filePath: string) => {
+  const str = (await readFile(filePath)).toString();
+  return parseDogenConfig(str);
+};
 
 export const detectDogenConfig = async (dir: string) => {
   for (const c of CONFIG_FILE_NAMES) {
     const p = path.resolve(dir, c.name);
     if (await isFileExists(p)) {
-      const str = (await readFile(p)).toString();
-      return parseDogenConfig(str);
+      return parseDogenConfigFile(p);
     }
   }
 

@@ -1,9 +1,10 @@
 import { Command } from 'commander';
 import { generateDockerfile } from '../lib';
 import { isFileExists } from '../lib/utils';
-import { parseDogenConfig } from '../lib/dogenConfig';
+import { parseDogenConfigFile } from '../lib/dogenConfig';
+import { DogenInputConfig } from '../lib/types';
 
-const main = async () => {
+const cli = async (argv = process.argv) => {
   const prog = new Command();
 
   prog
@@ -18,15 +19,18 @@ const main = async () => {
     .action(async (configPath?: string) => {
       try {
         if (configPath && !(await isFileExists(configPath))) {
-          console.warn(`config does not exists at '${configPath}'`);
+          console.error(`config does not exists at '${configPath}'`);
           process.exit(1);
         }
 
+        let config: DogenInputConfig = undefined;
         //#region Parse provided config
-        const { config, warnings: configWarnings } =
-          parseDogenConfig(configPath);
-        if (configWarnings.length) {
-          console.warn(configWarnings.map((c) => `WARN: ${c}`).join('\n'));
+        if (configPath) {
+          const parsed = await parseDogenConfigFile(configPath);
+          config = parsed.config;
+          if (parsed.warnings.length) {
+            console.warn(parsed.warnings.map((c) => `WARN: ${c}`).join('\n'));
+          }
         }
         //#endregion
 
@@ -38,16 +42,16 @@ const main = async () => {
       } catch (err) {
         switch (err?.message) {
           case 'DOCKERFILE_ALREADY_EXISTS': {
-            console.log(`Dockerfile already exists`);
+            console.error(`ERROR: Dockerfile already exists`);
             return;
           }
           default:
         }
-        console.log(`Could not generated Dockerfile`, err);
+        console.log(`Could not generated Dockerfile\nERROR:`, err);
       }
     });
 
-  await prog.parseAsync(process.argv);
+  await prog.parseAsync(argv);
 };
 
-void main();
+export default cli;
