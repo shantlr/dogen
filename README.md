@@ -19,7 +19,7 @@ Generated Dockerfile can be configured using a `.dogenrc` at root of your projec
 
 ```jsonc
 {
-  "nodeImage": "node:18-alpine3.17" // custom image to use for installing/building/running your service
+  "nodeImage": "node:18-alpine3.17", // custom image to use for installing/building/running your service
   "build": {
     "script": "build:prod" // custom script (defined in your package.json) to call for building your service
   },
