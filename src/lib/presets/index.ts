@@ -1,7 +1,12 @@
 import { JQ_PRESETS } from '../dockerfile/presets';
-import { DockerfileOp, DockerfileTarget } from '../dockerfile/types';
+import {
+  DockerfileOp,
+  DockerfileRunMount,
+  DockerfileTarget,
+} from '../dockerfile/types';
 import { PackageJson } from '../packageJson';
 import { copy } from '../dockerfile';
+import path from 'path';
 
 const formatTargetName = (name: string) => {
   return name.replace(/@/g, '_');
@@ -23,6 +28,7 @@ export const buildNodeService = ({
     baseNodeImage: string;
 
     install: {
+      mounts?: DockerfileRunMount[];
       files: (string | [string, string])[];
       /**
        * command to run to install dependencies
@@ -93,6 +99,10 @@ export const buildNodeService = ({
       {
         type: 'RUN',
         cmd: config.install.cmd,
+        mounts: config.install.mounts?.map((m) => ({
+          ...m,
+          dst: path.relative(projectDir, m.dst),
+        })),
       },
     ],
   };

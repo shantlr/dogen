@@ -50,7 +50,7 @@ describe('findPackageJson', () => {
       '/app/package.json': JSON.stringify(packageJson),
     });
 
-    expect(() =>
+    await expect(() =>
       findPackageJson('/app/src/config', '/app/src')
     ).rejects.toThrowError('package.json not found');
   });

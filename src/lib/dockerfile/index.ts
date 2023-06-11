@@ -36,10 +36,23 @@ const formatOp = (op: DockerfileOp): string => {
       return `CMD [${op.cmd.map((c) => `"${c}"`).join(',')}]`;
     }
     case 'RUN': {
+      const params: string[] = [];
+
+      op.mounts?.forEach((m) => {
+        params.push(
+          `--mount=type=${m.type},id=${m.id},dst=${m.dst}${
+            m.readOnly ? `,ro=true` : ''
+          }`
+        );
+      });
+
       if (typeof op.cmd === 'string') {
-        return `RUN ${op.cmd}`;
+        params.push(op.cmd);
+      } else {
+        params.push(`[${op.cmd.map((c) => `"${c}"`).join(',')}]`);
       }
-      return `RUN [${op.cmd.map((c) => `"${c}"`).join(',')}]`;
+
+      return `RUN ${params.join(' ')}`;
     }
     default:
   }

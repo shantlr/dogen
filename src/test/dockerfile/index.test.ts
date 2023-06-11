@@ -211,6 +211,31 @@ CMD ["yarn","install"]`);
     ).toBe(`FROM alpine:3.18 AS app
 RUN yarn install`);
   });
+  it('should format run with mounts', () => {
+    expect(
+      formatDockerfile([
+        {
+          from: 'alpine:3.18',
+          as: 'app',
+          ops: [
+            {
+              type: 'RUN',
+              cmd: 'yarn install',
+              mounts: [
+                {
+                  id: 'npmrc',
+                  type: 'secret',
+                  dst: '.npmrc',
+                  readOnly: true,
+                },
+              ],
+            },
+          ],
+        },
+      ])
+    ).toBe(`FROM alpine:3.18 AS app
+RUN --mount=type=secret,id=npmrc,dst=.npmrc,ro=true yarn install`);
+  });
   it('should format array run', () => {
     expect(
       formatDockerfile([

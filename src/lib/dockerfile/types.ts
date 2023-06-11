@@ -5,6 +5,12 @@ export type DockerfileTarget = {
   ops: DockerfileOp[];
 };
 
+export type DockerfileRunMount = {
+  type: 'secret';
+  id: string;
+  dst: string;
+  readOnly?: boolean;
+};
 export type DockerfileOp =
   | {
       type: 'WORKDIR';
@@ -43,4 +49,9 @@ export type DockerfileOp =
   | {
       type: 'RUN';
       cmd: string | string[];
+      mounts?: DockerfileRunMount[];
     };
+
+export type DockrefileOps = {
+  [key in DockerfileOp['type']]: DockerfileOp & { type: key };
+};

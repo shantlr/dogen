@@ -12,6 +12,8 @@ export type DogenInputConfig = {
 
   install?: {
     keepCache?: boolean;
+    npmrc?: boolean | string;
+    cmd?: string;
   };
   build?: {
     /**

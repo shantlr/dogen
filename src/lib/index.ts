@@ -1,11 +1,12 @@
 import path from 'path';
 import { PackageJson, findPackageJson } from './packageJson';
-import { appendFile, readdir, stat, writeFile } from 'fs/promises';
+import { appendFile, readdir, writeFile } from 'fs/promises';
 import { buildNodeService } from './presets';
 import { formatDockerfile } from './dockerfile';
 import { StringOrDeepStringArray, fcmd, flatJoin, isFileExists } from './utils';
 import { detectDogenConfig } from './dogenConfig';
 import { DogenInputConfig, DogenResolvedConfig } from './types';
+import { DockerfileRunMount } from './dockerfile/types';
 
 const detectBuildFiles = async (dir: string, config: DogenResolvedConfig) => {
   // TODO: refacto
@@ -58,46 +59,61 @@ const detectBuildFiles = async (dir: string, config: DogenResolvedConfig) => {
   return res;
 };
 
-const detectPackageManager = async (
+export const detectPackageManager = async (
   dir: string,
-  config: DogenResolvedConfig
-) => {
-  try {
-    await stat(path.resolve(dir, 'yarn.lock'));
+  config: Pick<DogenResolvedConfig, 'install'>
+): Promise<{
+  packageManager: string;
+  runScriptCmd: string;
+  install: {
+    files: string[];
+    mounts: DockerfileRunMount[];
+    cmd: string;
+  };
+}> => {
+  const mounts: DockerfileRunMount[] = [];
+
+  if (config.install?.npmrc) {
+    mounts.push({
+      id:
+        typeof config.install.npmrc === 'string'
+          ? config.install.npmrc
+          : 'npmrc',
+      dst: '.npmrc',
+      type: 'secret',
+      readOnly: true,
+    });
+  }
+
+  if (await isFileExists(path.resolve(dir, 'yarn.lock'))) {
     const installOpts = ['--pure-lockfile', '--non-interactive'];
     const cmds: StringOrDeepStringArray = [['yarn install', installOpts]];
     if (config.install?.keepCache !== true) {
       installOpts.push(`--cache-folder ./.ycache`);
       cmds.push(`&& rm -rf ./.ycache`);
     }
+
     return {
       packageManager: 'yarn',
       runScriptCmd: `yarn`,
       install: {
+        mounts,
         files: [path.resolve(dir, 'yarn.lock')],
         cmd: flatJoin(cmds, ' '),
       },
     };
-  } catch (err) {
-    if (err.code !== 'ENOENT') {
-      throw err;
-    }
   }
 
-  try {
-    await stat(path.resolve(dir, 'package-npm.lock'));
+  if (await isFileExists(path.resolve(dir, 'package-npm.lock'))) {
     return {
       packageManager: 'npm',
       runScriptCmd: `npm run`,
       install: {
+        mounts,
         files: [path.resolve(dir, 'package-npm.lock')],
         cmd: 'npm install',
       },
     };
-  } catch (err) {
-    if (err.code !== 'ENOENT') {
-      throw err;
-    }
   }
 
   throw new Error(`Unable to detect used package manager`);
