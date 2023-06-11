@@ -49,7 +49,7 @@ FROM node-base AS app_install-deps
 WORKDIR /service
 COPY --from=app_extract-deps /tmp/deps.json package.json
 COPY yarn.lock yarn.lock
-RUN yarn install --frozen-lockfile --no-cache
+RUN yarn install --pure-lockfile --non-interactive --cache-folder ./.ycache && rm -rf ./.ycache
 
 # Build app
 FROM node-base AS app_build

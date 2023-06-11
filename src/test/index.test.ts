@@ -45,7 +45,7 @@ FROM node-base AS express-server_install-deps
 WORKDIR /app
 COPY --from=express-server_extract-deps /tmp/deps.json package.json
 COPY yarn.lock yarn.lock
-RUN yarn install --frozen-lockfile --no-cache
+RUN yarn install --pure-lockfile --non-interactive --cache-folder ./.ycache && rm -rf ./.ycache
 
 # Build express-server
 FROM node-base AS express-server_build
@@ -55,7 +55,7 @@ COPY package.json package.json
 CMD yarn build
 
 FROM express-server_build AS express-server
-CMD node ./build/index.js
+CMD node build/index.js
 #enddogen
 `);
   });
