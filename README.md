@@ -17,7 +17,7 @@ cat Dockerfile
 
 Generated Dockerfile can be configured using a `.dogenrc` at root of your project
 
-```json
+```jsonc
 {
   "nodeImage": "node:18-alpine3.17" // custom image to use for installing/building/running your service
   "build": {
