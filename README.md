@@ -37,7 +37,7 @@ Generated Dockerfile can be configured using a `.dogenrc` at root of your projec
 
 `install.keepCache`: {boolean} keep package manager cache on node_modules installation
 
-`install.npmrc`: {boolean} mount a npmrc file when running installation command, npmrc file should provided during build using secret (e.g `docker build --secret id=npmrc,src=.npmrc [...]`)
+`install.npmrc`: {boolean|string} mount a npmrc file when running installation command, npmrc file should be provided during build using secret (e.g `docker build --secret id=npmrc,src=.npmrc [...]`)
 
 `install.cmd`: {string} custom command to run installation
 
