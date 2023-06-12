@@ -35,11 +35,15 @@ Generated Dockerfile can be configured using a `.dogenrc` at root of your projec
 
 `container.workdir`: {string} customize workir used in docker to install/build/run your service
 
+`install.name`: {string} customize dockerfile install target name
+
 `install.keepCache`: {boolean} keep package manager cache on node_modules installation
 
 `install.npmrc`: {boolean|string} mount a npmrc file when running installation command, npmrc file should be provided during build using secret (e.g `docker build --secret id=npmrc,src=.npmrc [...]`)
 
 `install.cmd`: {string} custom command to run installation
+
+`build.name`: {string} customize dockerfile build target name
 
 `build.includes`: {string|string[]} files to copy for building service. (by default dogen try to autodetect files that should be copied)
 
@@ -50,6 +54,8 @@ Generated Dockerfile can be configured using a `.dogenrc` at root of your projec
 `build.cmd`: {string} command to use to run to build your service
 
 `postBuild.includes`: {string | string[]} files to copy after your service is built
+
+`run.name`: {string} customize dockerfile run target name
 
 `run.script`: {string} name of script present in you package.json to use to run your service. Ignored if `run.cmd` is provided
 
