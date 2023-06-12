@@ -27,7 +27,12 @@ export const buildNodeService = ({
     targetPrefix?: string;
     baseNodeImage: string;
 
+    deps: {
+      name: string;
+    };
+
     install: {
+      name?: string;
       mounts?: DockerfileRunMount[];
       files: (string | [string, string])[];
       /**
@@ -37,6 +42,7 @@ export const buildNodeService = ({
       cmd: string | string[];
     };
     build: {
+      name?: string;
       /**
        * file to copy required for building service
        */
@@ -49,7 +55,10 @@ export const buildNodeService = ({
     postBuild: {
       files: string[];
     };
-    runCmd: string | string[];
+    run: {
+      name?: string;
+      cmd: string | string[];
+    };
   };
 }) => {
   const asPrefix = config.targetPrefix || '';
@@ -65,7 +74,7 @@ export const buildNodeService = ({
 
   const extractPackageJsonDepsTarget: DockerfileTarget = {
     from: JQ_PRESETS,
-    as: `${asPrefix}${pkgName}_extract-deps`,
+    as: config.deps?.name || `${asPrefix}${pkgName}_extract-deps`,
     comment: `Strip package.json and only keep fields used for installing node_modules`,
     ops: [
       {
@@ -82,7 +91,7 @@ export const buildNodeService = ({
 
   const installTarget: DockerfileTarget = {
     from: nodeBaseTarget,
-    as: `${asPrefix}${pkgName}_install-deps`,
+    as: config.install?.name || `${asPrefix}${pkgName}_install-deps`,
     comment: `Install ${packageJson.name} node_modules`,
     ops: [
       {
@@ -109,7 +118,7 @@ export const buildNodeService = ({
 
   const buildTarget: DockerfileTarget = {
     from: nodeBaseTarget,
-    as: `${asPrefix}${pkgName}_build`,
+    as: config.build?.name || `${asPrefix}${pkgName}_build`,
     comment: `Build ${packageJson.name}`,
     ops: [
       {
@@ -142,11 +151,11 @@ export const buildNodeService = ({
 
   const runTarget: DockerfileTarget = {
     from: buildTarget.as,
-    as: `${asPrefix}${pkgName}`,
+    as: config.run.name || `${asPrefix}${pkgName}`,
     ops: [
       {
         type: 'CMD',
-        cmd: `${config.runCmd}`,
+        cmd: `${config.run.cmd}`,
       },
     ],
   };

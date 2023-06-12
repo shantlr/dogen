@@ -36,25 +36,25 @@ RUN apk add --update --no-cache jq
 FROM node:latest AS node-base
 
 # Strip package.json and only keep fields used for installing node_modules
-FROM jq AS express-server_extract-deps
+FROM jq AS extract-deps
 COPY package.json /tmp/package.json
 RUN jq '{name, dependencies, devDependencies}' < /tmp/package.json > /tmp/deps.json
 
 # Install express-server node_modules
-FROM node-base AS express-server_install-deps
+FROM node-base AS install-deps
 WORKDIR /app
-COPY --from=express-server_extract-deps /tmp/deps.json package.json
+COPY --from=extract-deps /tmp/deps.json package.json
 COPY yarn.lock yarn.lock
 RUN yarn install --pure-lockfile --non-interactive --cache-folder ./.ycache && rm -rf ./.ycache
 
 # Build express-server
-FROM node-base AS express-server_build
+FROM node-base AS build
 WORKDIR /app
-COPY --from=express-server_install-deps /app/node_modules node_modules
+COPY --from=install-deps /app/node_modules node_modules
 COPY package.json package.json
 CMD yarn build
 
-FROM express-server_build AS express-server
+FROM build AS service
 CMD node ./build/index.js
 #enddogen
 `);
@@ -93,25 +93,25 @@ RUN apk add --update --no-cache jq
 FROM node:latest AS node-base
 
 # Strip package.json and only keep fields used for installing node_modules
-FROM jq AS express-server_extract-deps
+FROM jq AS extract-deps
 COPY package.json /tmp/package.json
 RUN jq '{name, dependencies, devDependencies}' < /tmp/package.json > /tmp/deps.json
 
 # Install express-server node_modules
-FROM node-base AS express-server_install-deps
+FROM node-base AS install-deps
 WORKDIR /app
-COPY --from=express-server_extract-deps /tmp/deps.json package.json
+COPY --from=extract-deps /tmp/deps.json package.json
 COPY yarn.lock yarn.lock
 RUN yarn install --pure-lockfile --non-interactive
 
 # Build express-server
-FROM node-base AS express-server_build
+FROM node-base AS build
 WORKDIR /app
-COPY --from=express-server_install-deps /app/node_modules node_modules
+COPY --from=install-deps /app/node_modules node_modules
 COPY package.json package.json
 CMD yarn build
 
-FROM express-server_build AS express-server
+FROM build AS service
 CMD node ./build/index.js
 #enddogen
 `);
@@ -150,25 +150,25 @@ RUN apk add --update --no-cache jq
 FROM node:latest AS node-base
 
 # Strip package.json and only keep fields used for installing node_modules
-FROM jq AS express-server_extract-deps
+FROM jq AS extract-deps
 COPY package.json /tmp/package.json
 RUN jq '{name, dependencies, devDependencies}' < /tmp/package.json > /tmp/deps.json
 
 # Install express-server node_modules
-FROM node-base AS express-server_install-deps
+FROM node-base AS install-deps
 WORKDIR /app
-COPY --from=express-server_extract-deps /tmp/deps.json package.json
+COPY --from=extract-deps /tmp/deps.json package.json
 COPY yarn.lock yarn.lock
 RUN --mount=type=secret,id=npmrc,dst=../home/plin/work/dogen/.npmrc,ro=true yarn install --pure-lockfile --non-interactive --cache-folder ./.ycache && rm -rf ./.ycache
 
 # Build express-server
-FROM node-base AS express-server_build
+FROM node-base AS build
 WORKDIR /app
-COPY --from=express-server_install-deps /app/node_modules node_modules
+COPY --from=install-deps /app/node_modules node_modules
 COPY package.json package.json
 CMD yarn build
 
-FROM express-server_build AS express-server
+FROM build AS service
 CMD node ./build/index.js
 #enddogen
 `);

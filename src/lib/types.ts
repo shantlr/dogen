@@ -11,11 +11,13 @@ export type DogenInputConfig = {
   };
 
   install?: {
+    name?: string;
     keepCache?: boolean;
     npmrc?: boolean | string;
     cmd?: string;
   };
   build?: {
+    name?: string;
     /**
      * package.json script to call for building service
      * Script will be run using detected package manager
@@ -49,6 +51,7 @@ export type DogenInputConfig = {
   };
 
   run?: {
+    name?: string;
     cmd?: string;
     script?: string;
   };

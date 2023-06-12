@@ -40,25 +40,25 @@ RUN apk add --update --no-cache jq
 FROM node:latest AS node-base
 
 # Strip package.json and only keep fields used for installing node_modules
-FROM jq AS app_extract-deps
+FROM jq AS extract-deps
 COPY package.json /tmp/package.json
 RUN jq '{name, dependencies, devDependencies}' < /tmp/package.json > /tmp/deps.json
 
 # Install app node_modules
-FROM node-base AS app_install-deps
+FROM node-base AS install-deps
 WORKDIR /service
-COPY --from=app_extract-deps /tmp/deps.json package.json
+COPY --from=extract-deps /tmp/deps.json package.json
 COPY yarn.lock yarn.lock
 RUN yarn install --pure-lockfile --non-interactive --cache-folder ./.ycache && rm -rf ./.ycache
 
 # Build app
-FROM node-base AS app_build
+FROM node-base AS build
 WORKDIR /service
-COPY --from=app_install-deps /service/node_modules node_modules
+COPY --from=install-deps /service/node_modules node_modules
 COPY package.json package.json
 CMD yarn build
 
-FROM app_build AS app
+FROM build AS service
 CMD node ./build/index.js
 #enddogen
 `);

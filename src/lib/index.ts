@@ -66,6 +66,7 @@ export const detectPackageManager = async (
   packageManager: string;
   runScriptCmd: string;
   install: {
+    name: string;
     files: string[];
     mounts: DockerfileRunMount[];
     cmd: string;
@@ -97,6 +98,7 @@ export const detectPackageManager = async (
       packageManager: 'yarn',
       runScriptCmd: `yarn`,
       install: {
+        name: config.install?.name || 'install-deps',
         mounts,
         files: [path.resolve(dir, 'yarn.lock')],
         cmd: flatJoin(cmds, ' '),
@@ -109,6 +111,7 @@ export const detectPackageManager = async (
       packageManager: 'npm',
       runScriptCmd: `npm run`,
       install: {
+        name: config.install?.name || 'install-deps',
         mounts,
         files: [path.resolve(dir, 'package-npm.lock')],
         cmd: 'npm install',
@@ -156,8 +159,12 @@ const createDockerfileTargetsFromPackageJson = async ({
     projectDir,
     config: {
       baseNodeImage: config.nodeImage,
+      deps: {
+        name: 'extract-deps',
+      },
       install,
       build: {
+        name: config.build?.name || 'build',
         files: buildFiles,
         cmd:
           config.build?.cmd ||
@@ -173,11 +180,14 @@ const createDockerfileTargetsFromPackageJson = async ({
             : config.postBuild?.includes || [],
       },
       workdir: config.container.workdir,
-      runCmd:
-        config.run?.cmd ||
-        fcmd`${runScriptCmd} ${config.run?.script}` ||
-        fcmd`node ${packageJson.main}` ||
-        'node ./build/index.js',
+      run: {
+        name: 'service',
+        cmd:
+          config.run?.cmd ||
+          fcmd`${runScriptCmd} ${config.run?.script}` ||
+          fcmd`node ${packageJson.main}` ||
+          'node ./build/index.js',
+      },
     },
   });
 };
