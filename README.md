@@ -60,3 +60,5 @@ Generated Dockerfile can be configured using a `.dogenrc` at root of your projec
 `run.script`: {string} name of script present in you package.json to use to run your service. Ignored if `run.cmd` is provided
 
 `run.cmd`: {string} command to use to run your service
+
+`run.expose`: {number} add expose port to run target

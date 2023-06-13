@@ -58,6 +58,7 @@ export const buildNodeService = ({
     run: {
       name?: string;
       cmd: string | string[];
+      expose?: number;
     };
   };
 }) => {
@@ -159,6 +160,12 @@ export const buildNodeService = ({
       },
     ],
   };
+  if (typeof config.run.expose === 'number') {
+    runTarget.ops.push({
+      type: 'EXPOSE',
+      port: config.run.expose,
+    });
+  }
 
   return {
     targets: [
