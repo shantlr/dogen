@@ -54,6 +54,7 @@ export type DogenInputConfig = {
     name?: string;
     cmd?: string;
     script?: string;
+    expose?: number;
   };
 };
 
