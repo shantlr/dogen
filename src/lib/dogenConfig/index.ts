@@ -1,11 +1,11 @@
 import path from 'path';
 import { isFileExists } from '../utils';
 import { readFile } from 'fs/promises';
-import { DogenInputConfig } from '../types';
+import { DogenConfig } from '../types';
 
 const CONFIG_FILE_NAMES = [{ name: '.dogenrc' }];
 
-const assertDogenConfig = (content: DogenInputConfig) => {
+const assertDogenConfig = (content: DogenConfig) => {
   const warnings: string[] = [];
   if (content.build?.cmd && content.build?.script) {
     warnings.push(
@@ -27,7 +27,7 @@ export const parseDogenConfig = (str: string) => {
   const content = JSON.parse(str);
   const { warnings } = assertDogenConfig(content);
   return {
-    config: content as DogenInputConfig,
+    config: content as DogenConfig,
     warnings,
   };
 };

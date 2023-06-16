@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { generateDockerfile } from '../lib';
 import { isFileExists } from '../lib/utils';
 import { parseDogenConfigFile } from '../lib/dogenConfig';
-import { DogenInputConfig } from '../lib/types';
+import { DogenConfig } from '../lib/types';
 
 const cli = async (argv = process.argv) => {
   const prog = new Command();
@@ -23,7 +23,7 @@ const cli = async (argv = process.argv) => {
           process.exit(1);
         }
 
-        let config: DogenInputConfig = undefined;
+        let config: DogenConfig = undefined;
         //#region Parse provided config
         if (configPath) {
           const parsed = await parseDogenConfigFile(configPath);

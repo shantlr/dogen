@@ -5,7 +5,7 @@ import { buildNodeService } from './presets';
 import { formatDockerfile } from './dockerfile';
 import { StringOrDeepStringArray, fcmd, flatJoin, isFileExists } from './utils';
 import { detectDogenConfig } from './dogenConfig';
-import { DogenInputConfig, DogenResolvedConfig } from './types';
+import { DogenConfig, DogenResolvedConfig } from './types';
 import { DockerfileRunMount } from './dockerfile/types';
 
 const detectBuildFiles = async (dir: string, config: DogenResolvedConfig) => {
@@ -210,9 +210,9 @@ export const generateDockerfile = async ({
   /**
    * If not provided, will try to autodetect it
    */
-  config?: DogenInputConfig;
+  config?: DogenConfig;
   mapConfig?: (
-    detectedConfig: DogenInputConfig | null
+    detectedConfig: DogenConfig | null
   ) => DogenResolvedConfig | Promise<DogenResolvedConfig>;
 }) => {
   const { dir: projectDir, packageJson } = await findPackageJson(
