@@ -10,6 +10,12 @@ describe('fcmd', () => {
   it('should resolve only single arg to string', () => {
     expect(fcmd(`${'yarn run'}`)).toBe('yarn run');
   });
+  it('should resolve string', () => {
+    expect(fcmd(`${'yarn'} ${'build'}`)).toBe(`yarn build`);
+  });
+  it('should resolve string 2', () => {
+    expect(fcmd(`${'yarn'} ${{ hello: 'build' }?.hello}`)).toBe(`yarn build`);
+  });
   it('should resolve undefined value to null', () => {
     expect(fcmd`yarn run ${undefined}`).toBe(null);
   });

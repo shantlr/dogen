@@ -111,7 +111,7 @@ export const buildNodeService = ({
         cmd: config.install.cmd,
         mounts: config.install.mounts?.map((m) => ({
           ...m,
-          dst: path.resolve(projectDir, m.dst),
+          dst: path.resolve(config.workdir, m.dst),
         })),
       },
     ],

@@ -42,14 +42,16 @@ export function fcmd(strs, ...values) {
     return strs;
   }
 
-  let res: string = strs;
+  let res = '';
 
   for (let i = 0; i < strs.length; i += 1) {
-    if (!values[i]) {
-      return null;
-    }
     res += strs[i];
-    res += values[i];
+    if (i < values.length) {
+      if (!values[i]) {
+        return null;
+      }
+      res += values[i];
+    }
   }
   return res;
 }
