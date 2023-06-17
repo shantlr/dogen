@@ -20,7 +20,8 @@
   },
   "dependencies": {
     "commander": "^10.0.1",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "yup": "^1.2.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.2",

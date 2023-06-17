@@ -7,6 +7,7 @@ jest.mock('fs/promises');
 describe('generateDockerfile', () => {
   beforeEach(() => {
     vol.reset();
+    jest.restoreAllMocks();
   });
 
   it('should generate Dockerfile for service using yarn', async () => {
@@ -22,6 +23,8 @@ describe('generateDockerfile', () => {
       },
       '/tmp'
     );
+    const spy = jest.spyOn(process, 'cwd');
+    spy.mockReturnValue('/tmp');
 
     await generateDockerfile({
       dir: '/service',
@@ -159,7 +162,7 @@ FROM node-base AS install-deps
 WORKDIR /app
 COPY --from=extract-deps /tmp/deps.json package.json
 COPY yarn.lock yarn.lock
-RUN --mount=type=secret,id=npmrc,dst=../home/plin/work/dogen/.npmrc,ro=true yarn install --pure-lockfile --non-interactive --cache-folder ./.ycache && rm -rf ./.ycache
+RUN --mount=type=secret,id=npmrc,dst=/service/.npmrc,ro=true yarn install --pure-lockfile --non-interactive --cache-folder ./.ycache && rm -rf ./.ycache
 
 # Build express-server
 FROM node-base AS build
