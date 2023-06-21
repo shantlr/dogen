@@ -38,7 +38,7 @@ export type DockerfileOp =
     }
   | {
       type: 'COPY';
-      from?: string;
+      from?: string | DockerfileTarget;
       src: string;
       dst?: string;
     }

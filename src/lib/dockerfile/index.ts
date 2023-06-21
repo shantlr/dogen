@@ -19,6 +19,8 @@ const formatOp = (op: DockerfileOp): string => {
       const params = [];
       if (typeof op.from === 'string') {
         params.push(`--from=${op.from}`);
+      } else if (op.from?.as) {
+        params.push(`--from=${op.from.as}`);
       }
 
       params.push(op.src);

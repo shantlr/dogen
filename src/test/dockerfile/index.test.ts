@@ -125,6 +125,33 @@ COPY package.json package.json`);
 FROM alpine:3.18 AS app
 COPY --from=common /app/package.json package.json`);
   });
+  it('should form copy from target', () => {
+    const common = {
+      from: 'alpine:3.18',
+      as: 'common',
+      ops: [],
+    };
+    expect(
+      formatDockerfile([
+        common,
+        {
+          from: 'alpine:3.18',
+          as: 'app',
+          ops: [
+            {
+              type: 'COPY',
+              from: common,
+              src: '/app/package.json',
+              dst: 'package.json',
+            },
+          ],
+        },
+      ])
+    ).toBe(`FROM alpine:3.18 AS common
+
+FROM alpine:3.18 AS app
+COPY --from=common /app/package.json package.json`);
+  });
   it('should format expose', () => {
     expect(
       formatDockerfile([
