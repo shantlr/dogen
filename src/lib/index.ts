@@ -1,63 +1,14 @@
 import path from 'path';
 import { PackageJson, findPackageJson } from './packageJson';
-import { appendFile, readdir, writeFile } from 'fs/promises';
+import { appendFile, writeFile } from 'fs/promises';
 import { buildNodeService } from './presets';
 import { formatDockerfile } from './dockerfile';
 import { StringOrDeepStringArray, fcmd, flatJoin, isFileExists } from './utils';
 import { detectDogenConfig } from './dogenConfig';
 import { DogenConfig, DogenResolvedConfig } from './types';
 import { DockerfileRunMount } from './dockerfile/types';
-
-const detectBuildFiles = async (dir: string, config: DogenResolvedConfig) => {
-  // TODO: refacto
-  const files = await readdir(dir, { withFileTypes: true });
-  const res: string[] = [];
-
-  const excludes = Array.isArray(config.build?.excludes)
-    ? config.build?.excludes
-    : config.build?.excludes
-    ? [config.build?.excludes]
-    : [];
-
-  if (config.build?.includes) {
-    if (Array.isArray(config.build.includes)) {
-      res.push(...config.build.includes.filter((i) => !excludes.includes(i)));
-    } else if (!excludes.includes(config.build.includes)) {
-      res.push(config.build.includes);
-    }
-  } else {
-    // auto detect build files
-    for (const file of files) {
-      switch (file.name) {
-        case 'src':
-        case 'tsconfig.json':
-        case '.babelrc': {
-          if (!excludes.includes(file.name)) {
-            res.push(file.name);
-          }
-          break;
-        }
-        default:
-      }
-    }
-  }
-
-  //#region Extra files
-  if (Array.isArray(config.build?.extraIncludes)) {
-    config.build.extraIncludes.forEach((f) => {
-      if (!res.includes(f)) {
-        res.push(f);
-      }
-    });
-  } else if (config.build?.extraIncludes) {
-    if (!res.includes(config.build?.extraIncludes)) {
-      res.push(config.build?.extraIncludes);
-    }
-  }
-  //#endregion
-
-  return res;
-};
+import { buildAppService } from './presets/app';
+import { detectBuildFiles } from './detectBuildFiles';
 
 export const detectPackageManager = async (
   dir: string,
@@ -136,12 +87,57 @@ const createDockerfileTargetsFromPackageJson = async ({
     config
   );
 
+  const buildFiles = await detectBuildFiles({
+    packageJson,
+    dir: projectDir,
+    config,
+  });
+
   // Build static html that is served using nginx
   if (
     packageJson.dependencies?.['react-scripts'] ||
-    packageJson.devDependencies?.['react-scripts']
+    packageJson.devDependencies?.['react-scripts'] ||
+    packageJson.dependencies?.['vite'] ||
+    packageJson.devDependencies?.['vite']
   ) {
-    //
+    return buildAppService({
+      packageJson,
+      projectDir,
+      config: {
+        baseNodeImage: config.nodeImage,
+        workdir: config?.container?.workdir,
+        extractDeps: {
+          name: 'extract-deps',
+        },
+        install,
+        postBuild: {
+          files:
+            typeof config.postBuild?.includes === 'string'
+              ? [config.postBuild?.includes]
+              : config.postBuild?.includes || [],
+        },
+        build: {
+          name: config?.build?.name || 'build',
+          dir: config?.build?.dir || 'build',
+          files: buildFiles,
+          cmd:
+            config.build?.cmd ||
+            fcmd`${runScriptCmd} ${config.build?.script}` ||
+            (packageJson.scripts?.['build:prod'] &&
+              `${runScriptCmd} ${'build:prod'}`) ||
+            `${runScriptCmd} build`,
+        },
+        serve: {
+          imageName: config?.serve?.imageName || 'nginx:stable-alpine',
+          customConfig: config?.serve?.customConfig,
+          configPath:
+            config?.serve?.configPath || `/etc/nginx/conf.d/default.conf`,
+          name: config?.serve?.name || 'serve',
+          dir: config?.serve?.dir,
+          expose: config?.serve?.expose || 80,
+        },
+      },
+    });
   }
 
   // Puppeteer require specific base image
@@ -151,8 +147,6 @@ const createDockerfileTargetsFromPackageJson = async ({
   ) {
     //
   }
-
-  const buildFiles = await detectBuildFiles(projectDir, config);
 
   return buildNodeService({
     packageJson,

@@ -51,10 +51,17 @@ const formatOp = (op: DockerfileOp): string => {
       if (typeof op.cmd === 'string') {
         params.push(op.cmd);
       } else {
-        params.push(`[${op.cmd.map((c) => `"${c}"`).join(',')}]`);
+        params.push(
+          `[${op.cmd.map((c) => `"${c.replace(/\n/g, '\\\n')}"`).join(',')}]`
+        );
       }
 
       return `RUN ${params.join(' ')}`;
+    }
+    case 'WRITE_FILE': {
+      return `RUN echo -e "${op.content.replace(/\n/g, '\\n\\\n')}" > ${
+        op.dst
+      }`;
     }
     default:
   }

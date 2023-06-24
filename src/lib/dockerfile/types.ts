@@ -50,6 +50,11 @@ export type DockerfileOp =
       type: 'RUN';
       cmd: string | string[];
       mounts?: DockerfileRunMount[];
+    }
+  | {
+      type: 'WRITE_FILE';
+      content: string;
+      dst: string;
     };
 
 export type DockrefileOps = {

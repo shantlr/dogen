@@ -1,3 +1,5 @@
+import path from 'path';
+import { copy } from '../dockerfile';
 import { JQ_PRESETS } from '../dockerfile/presets';
 import {
   DockerfileOp,
@@ -5,14 +7,9 @@ import {
   DockerfileTarget,
 } from '../dockerfile/types';
 import { PackageJson } from '../packageJson';
-import { copy } from '../dockerfile';
-import path from 'path';
 import { formatTargetName } from './utils';
 
-/**
- * Create dockerfile targets for a node service
- */
-export const buildNodeService = ({
+export const buildAppService = ({
   packageJson,
   projectDir,
   config,
@@ -24,7 +21,7 @@ export const buildNodeService = ({
     targetPrefix?: string;
     baseNodeImage: string;
 
-    deps: {
+    extractDeps: {
       name: string;
     };
 
@@ -40,6 +37,7 @@ export const buildNodeService = ({
     };
     build: {
       name?: string;
+      dir: string;
       /**
        * file to copy required for building service
        */
@@ -52,9 +50,12 @@ export const buildNodeService = ({
     postBuild: {
       files: string[];
     };
-    run: {
+    serve: {
+      imageName?: string;
       name?: string;
-      cmd: string | string[];
+      customConfig?: string;
+      configPath?: string;
+      dir: string;
       expose?: number;
     };
   };
@@ -72,7 +73,7 @@ export const buildNodeService = ({
 
   const extractPackageJsonDepsTarget: DockerfileTarget = {
     from: JQ_PRESETS,
-    as: config.deps?.name || `${asPrefix}${pkgName}_extract-deps`,
+    as: config.extractDeps?.name || `${asPrefix}${pkgName}_extract-deps`,
     comment: `Strip package.json and only keep fields used for installing node_modules`,
     ops: [
       {
@@ -98,7 +99,7 @@ export const buildNodeService = ({
       },
       {
         type: 'COPY',
-        from: extractPackageJsonDepsTarget,
+        from: extractPackageJsonDepsTarget.as,
         src: `/tmp/deps.json`,
         dst: `package.json`,
       },
@@ -125,7 +126,7 @@ export const buildNodeService = ({
       },
       {
         type: 'COPY',
-        from: installTarget,
+        from: installTarget.as,
         src: `${workdir}/node_modules`,
         dst: 'node_modules',
       },
@@ -136,7 +137,70 @@ export const buildNodeService = ({
       ...config.build.files.map((f): DockerfileOp => copy(f, projectDir)),
       {
         type: 'CMD',
-        cmd: `${config.build.cmd}`,
+        cmd: config.build.cmd,
+      },
+    ],
+  };
+
+  const serveTarget: DockerfileTarget = {
+    from: config.serve?.imageName,
+    as: config.serve?.name || `${asPrefix}${pkgName}`,
+    comment: `Serve ${pkgName}`,
+    ops: [
+      {
+        type: 'COPY',
+        src: path.resolve(workdir, config.build.dir),
+        dst: config.serve.dir,
+        from: buildTarget,
+      },
+      {
+        type: 'WRITE_FILE',
+        content:
+          config.serve?.customConfig ||
+          `server {
+  listen       80;
+  server_name  localhost;
+
+  location / {
+      root   /usr/share/nginx/html;
+      index  index.html index.htm;
+      try_files $uri /index.html;
+  }
+
+  error_page   500 502 503 504  /50x.html;
+  location = /50x.html {
+      root   /usr/share/nginx/html;
+  }
+`,
+        dst: config.serve?.configPath || `/etc/nginx/conf.d/default.conf`,
+      },
+      //       {
+      //         type: 'RUN',
+      //         cmd: `echo "${config.serve?.customConfig ||}" > ${config.serve?.configPath || '/etc/nginx/conf.d/default.conf'}`, [
+      //           'echo',
+      //           config.serve?.customConfig ||
+      //             `server {
+      //     listen       80;
+      //     server_name  localhost;
+
+      //     location / {
+      //         root   /usr/share/nginx/html;
+      //         index  index.html index.htm;
+      //         try_files $uri /index.html;
+      //     }
+
+      //     error_page   500 502 503 504  /50x.html;
+      //     location = /50x.html {
+      //         root   /usr/share/nginx/html;
+      //     }
+      // `,
+      //           '>',
+      //           config.serve.configPath,
+      //         ],
+      //       },
+      {
+        type: 'EXPOSE',
+        port: config.serve?.expose || 80,
       },
     ],
   };
@@ -146,32 +210,14 @@ export const buildNodeService = ({
       ...config.postBuild.files.map((f) => copy(f, projectDir))
     );
   }
-
-  const runTarget: DockerfileTarget = {
-    from: buildTarget.as,
-    as: config.run.name || `${asPrefix}${pkgName}`,
-    ops: [
-      {
-        type: 'CMD',
-        cmd: `${config.run.cmd}`,
-      },
-    ],
-  };
-  if (typeof config.run.expose === 'number') {
-    runTarget.ops.push({
-      type: 'EXPOSE',
-      port: config.run.expose,
-    });
-  }
-
   return {
     targets: [
       JQ_PRESETS,
-      nodeBaseTarget,
       extractPackageJsonDepsTarget,
+      nodeBaseTarget,
       installTarget,
       buildTarget,
-      runTarget,
+      serveTarget,
     ],
   };
 };

@@ -1,5 +1,17 @@
 import { stat } from 'fs/promises';
 
+export const isPathExists = async (path: string) => {
+  try {
+    await stat(path);
+    return true;
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return false;
+    }
+    throw err;
+  }
+};
+
 export const isFileExists = async (filePath: string) => {
   try {
     const f = await stat(filePath);

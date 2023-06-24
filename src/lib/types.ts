@@ -5,13 +5,25 @@ export type DogenConfig = {
   nodeImage?: string;
 
   /**
-   * Workdir to use in dockerfile
+   * dockerfile targets prefix
+   */
+  targetPrefix?: string;
+
+  /**
+   * workdir to use in dockerfile
    */
   container: {
     /**
      * customize workir used in docker to install/build/run your service
      */
     workdir?: string;
+  };
+
+  extractDeps?: {
+    /**
+     * customize dockerfile extract deps target name
+     */
+    name?: string;
   };
 
   install?: {
@@ -40,6 +52,12 @@ export type DogenConfig = {
      * customize dockerfile build target name
      */
     name?: string;
+
+    /**
+     * where the build output dir is
+     */
+    dir?: string;
+
     /**
      * name of script present in you package.json to use to build your service. Ignored if `build.cmd` is provided
      */
@@ -87,11 +105,41 @@ export type DogenConfig = {
      */
     expose?: number;
   };
+  /**
+   * Configure how app should be served
+   * This is only used for app that build a static files to be served
+   */
+  serve?: {
+    /**
+     * Serve target name
+     */
+    name?: string;
+    customConfig?: string;
+    configPath?: string;
+    /**
+     * Serve dir image
+     */
+    imageName?: string;
+    /**
+     * Served dir, built dir will be copied here
+     */
+    dir?: string;
+    /**
+     * Exposed port
+     */
+    expose?: number;
+  };
 };
 
 export type DogenResolvedConfig = Pick<
   DogenConfig,
-  'run' | 'build' | 'postBuild' | 'install'
+  | 'targetPrefix'
+  | 'extractDeps'
+  | 'run'
+  | 'build'
+  | 'postBuild'
+  | 'install'
+  | 'serve'
 > & {
   nodeImage: string;
   container: {
