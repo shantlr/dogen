@@ -59,7 +59,7 @@ const formatOp = (op: DockerfileOp): string => {
       return `RUN ${params.join(' ')}`;
     }
     case 'WRITE_FILE': {
-      return `RUN echo -e "${op.content.replace(/\n/g, '\\n\\\n')}" > ${
+      return `RUN echo -e -n "${op.content.replace(/\n/g, '\\n\\\n')}" > ${
         op.dst
       }`;
     }

@@ -69,7 +69,7 @@ CMD yarn build
 # Serve vite-app
 FROM nginx:stable-alpine AS serve
 COPY --from=build /app/build /app/build
-RUN echo -e "server {\\n\\
+RUN echo -e -n "server {\\n\\
   listen       80;\\n\\
   server_name  localhost;\\n\\
 \\n\\
@@ -145,7 +145,7 @@ CMD yarn build
 # Serve cra-app
 FROM nginx:stable-alpine AS serve
 COPY --from=build /app/build /app/build
-RUN echo -e "server {\\n\\
+RUN echo -e -n "server {\\n\\
   listen       80;\\n\\
   server_name  localhost;\\n\\
 \\n\\

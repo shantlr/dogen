@@ -280,4 +280,25 @@ RUN --mount=type=secret,id=npmrc,dst=.npmrc,ro=true yarn install`);
     ).toBe(`FROM alpine:3.18 AS app
 RUN ["yarn","install"]`);
   });
+  it('should write file using echo', () => {
+    expect(
+      formatDockerfile([
+        {
+          from: 'alpine:3.18',
+          as: 'app',
+          ops: [
+            {
+              type: 'WRITE_FILE',
+              content: 'line1\nline2\n\nline3',
+              dst: '/app/file',
+            },
+          ],
+        },
+      ])
+    ).toBe(`FROM alpine:3.18 AS app
+RUN echo -e -n "line1\\n\\
+line2\\n\\
+\\n\\
+line3" > /app/file`);
+  });
 });
