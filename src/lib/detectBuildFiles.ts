@@ -2,7 +2,7 @@ import { PackageJson } from './packageJson';
 import { DogenResolvedConfig } from './types';
 import { filter, flatMap, map } from 'lodash';
 import path from 'path';
-import { isPathExists } from './utils';
+import { isPathExists, isSameOrSubPath, isSubPath } from './utils';
 
 export const depsFiles: {
   [depName: string]: string[];
@@ -31,13 +31,48 @@ const resolveFiles = async (
   const res = await Promise.all(
     relativePaths.map(async (rel) => {
       const p = path.resolve(dir, rel);
-      if (!excludes.some((e) => e.startsWith(p)) && (await isPathExists(p))) {
+      if (
+        !excludes.some((e) => isSameOrSubPath(e, p)) &&
+        (await isPathExists(p))
+      ) {
         return p;
       }
       return null;
     })
   );
   return filter(res);
+};
+
+const assertNoSpecificExcludes = ({
+  includes,
+  excludes,
+}: {
+  includes: string[];
+  excludes: string[];
+}) => {
+  const subPaths = excludes.reduce((acc, e) => {
+    const conflict = includes.find((i) => isSubPath(i, e));
+    if (conflict) {
+      acc.push({
+        exclude: e,
+        include: conflict,
+      });
+    }
+    return acc;
+  }, []);
+
+  if (subPaths.length) {
+    throw new Error(
+      `Excludes more specific than includes is unhandled:\n${subPaths
+        .map(
+          (e) =>
+            `\t - exclude=${e.exclude} cannot be more specific than include=${e.include}`
+        )
+        .join(
+          '\n'
+        )}\nYou should either use .dockerignore or use more specific includes`
+    );
+  }
 };
 
 export const detectBuildFiles = async ({
@@ -49,8 +84,6 @@ export const detectBuildFiles = async ({
   packageJson: PackageJson;
   config: Pick<DogenResolvedConfig, 'build'>;
 }) => {
-  // TODO: refacto
-  // const files = await readdir(dir, { withFileTypes: true });
   const res: string[] = [];
 
   const excludes = (
@@ -60,16 +93,15 @@ export const detectBuildFiles = async ({
   ).map((e) => path.resolve(dir, e));
 
   if (config.build?.includes) {
-    const includes =
+    const includes = (
       typeof config.build.includes === 'string'
         ? [config.build.includes]
-        : config.build.includes;
+        : config.build.includes
+    ).map((p) => path.resolve(dir, p));
 
-    res.push(
-      ...includes
-        .map((i) => path.resolve(dir, i))
-        .filter((i) => !excludes.some((e) => !e.startsWith(i)))
-    );
+    assertNoSpecificExcludes({ includes, excludes });
+
+    res.push(...(await resolveFiles(includes, dir, excludes)));
   } else {
     const includes = await Promise.all([
       resolveFiles(defaultIncludes, dir, excludes),
@@ -86,52 +118,14 @@ export const detectBuildFiles = async ({
     res.push(...flatMap(includes));
   }
 
-  // const excludes = Array.isArray(config.build?.excludes)
-  //   ? config.build?.excludes
-  //   : config.build?.excludes
-  //   ? [config.build?.excludes]
-  //   : [];
-
-  // if (config.build?.includes) {
-  //   // provided build files
-  //   const includes =
-  //     typeof config.build.includes === 'string'
-  //       ? [config.build.includes]
-  //       : config.build.includes;
-  //   res.push(...includes.filter((i) => !excludes.includes(i)));
-  // } else {
-  //   // auto detect build files
-  //   let includes = ['src'];
-
-  //   forEach(depsFiles, (files, depName) => {
-  //     if (
-  //       packageJson.devDependencies?.[depName] ||
-  //       packageJson?.dependencies?.[depName]
-  //     ) {
-  //       includes.push(...files);
-  //     }
-  //   });
-
-  //   includes = uniq(includes);
-
-  //   includes.forEach((i) => {
-  //     if (!excludes.includes(i) && files.find((f) => f.name === i)) {
-  //       res.push(i);
-  //     }
-  //   });
-  // }
-
   //#region Extra files
-  if (Array.isArray(config.build?.extraIncludes)) {
-    config.build.extraIncludes.forEach((f) => {
-      if (!res.includes(f)) {
-        res.push(f);
-      }
-    });
-  } else if (config.build?.extraIncludes) {
-    if (!res.includes(config.build?.extraIncludes)) {
-      res.push(config.build?.extraIncludes);
-    }
+  if (config.build?.extraIncludes) {
+    const includes =
+      typeof config.build.extraIncludes === 'string'
+        ? [config.build.extraIncludes]
+        : config.build.extraIncludes;
+
+    res.push(...(await resolveFiles(includes, dir, excludes)));
   }
   //#endregion
 

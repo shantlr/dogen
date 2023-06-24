@@ -27,6 +27,31 @@ export const isFileExists = async (filePath: string) => {
   }
 };
 
+export const isSubPath = (refPath: string, p: string) => {
+  if (refPath === p) {
+    return false;
+  }
+  const ref = refPath.split('/');
+  const other = p.split('/');
+  if (ref.length > other.length) {
+    return false;
+  }
+
+  for (let i = 0; i < ref.length; i += 1) {
+    if (ref[i] !== other[i]) {
+      return false;
+    }
+  }
+  return true;
+};
+
+export const isSameOrSubPath = (refPath: string, p: string) => {
+  if (refPath === p) {
+    return true;
+  }
+  return isSubPath(refPath, p);
+};
+
 export type StringOrDeepStringArray =
   | string
   | string[]
