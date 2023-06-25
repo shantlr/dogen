@@ -23,17 +23,23 @@ export const depsFiles: {
 
 const defaultIncludes = ['src'];
 
-const resolveFiles = async (
-  relativePaths: string[],
-  dir: string,
-  excludes: string[]
-) => {
+const resolveFiles = async ({
+  includes,
+  dir,
+  excludes,
+  checkExists,
+}: {
+  checkExists?: boolean;
+  includes: string[];
+  dir: string;
+  excludes: string[];
+}) => {
   const res = await Promise.all(
-    relativePaths.map(async (rel) => {
+    includes.map(async (rel) => {
       const p = path.resolve(dir, rel);
       if (
         !excludes.some((e) => isSameOrSubPath(e, p)) &&
-        (await isPathExists(p))
+        (!checkExists || (await isPathExists(p)))
       ) {
         return p;
       }
@@ -101,16 +107,28 @@ export const detectBuildFiles = async ({
 
     assertNoSpecificExcludes({ includes, excludes });
 
-    res.push(...(await resolveFiles(includes, dir, excludes)));
+    res.push(
+      ...(await resolveFiles({ includes, dir, excludes, checkExists: true }))
+    );
   } else {
     const includes = await Promise.all([
-      resolveFiles(defaultIncludes, dir, excludes),
+      resolveFiles({
+        includes: defaultIncludes,
+        dir,
+        excludes,
+        checkExists: true,
+      }),
       ...map(depsFiles, async (depFiles, depName) => {
         if (
           packageJson.dependencies?.[depName] ||
           packageJson.devDependencies?.[depName]
         ) {
-          return resolveFiles(depFiles, dir, excludes);
+          return resolveFiles({
+            includes: depFiles,
+            dir,
+            excludes,
+            checkExists: true,
+          });
         }
         return [];
       }),
@@ -125,7 +143,14 @@ export const detectBuildFiles = async ({
         ? [config.build.extraIncludes]
         : config.build.extraIncludes;
 
-    res.push(...(await resolveFiles(includes, dir, excludes)));
+    res.push(
+      ...(await resolveFiles({
+        includes,
+        dir,
+        excludes,
+        checkExists: false,
+      }))
+    );
   }
   //#endregion
 

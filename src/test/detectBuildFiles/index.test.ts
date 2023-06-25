@@ -1,6 +1,5 @@
 import { vol } from 'memfs';
 import { detectBuildFiles } from '../../lib/detectBuildFiles';
-import exp from 'constants';
 
 jest.mock('fs/promises');
 
@@ -267,6 +266,73 @@ describe('detectBuildFiles', () => {
       '/app/src',
       '/app/vite.config.ts',
       '/app/tsconfig.node.json',
+    ]);
+  });
+  it('should add extra includes', async () => {
+    vol.fromNestedJSON({
+      '/app': {
+        src: {},
+        'tsconfig.json': '',
+        'tsconfig.node.json': '',
+        'vite.config.ts': '',
+      },
+    });
+
+    const res = await detectBuildFiles({
+      config: {
+        build: {
+          extraIncludes: ['lib'],
+        },
+      },
+      dir: '/app',
+      packageJson: {
+        name: 'app',
+        version: '0.0.1',
+        devDependencies: {
+          vite: '^4',
+        },
+      },
+    });
+    expect(res).toEqual([
+      '/app/src',
+      '/app/vite.config.ts',
+      '/app/tsconfig.node.json',
+      '/app/lib',
+    ]);
+  });
+  it('should add excludes extra includes', async () => {
+    vol.fromNestedJSON({
+      '/app': {
+        src: {},
+        data: {},
+        lib: {},
+        'tsconfig.json': '',
+        'tsconfig.node.json': '',
+        'vite.config.ts': '',
+      },
+    });
+
+    const res = await detectBuildFiles({
+      config: {
+        build: {
+          excludes: 'data',
+          extraIncludes: ['lib', 'data'],
+        },
+      },
+      dir: '/app',
+      packageJson: {
+        name: 'app',
+        version: '0.0.1',
+        devDependencies: {
+          vite: '^4',
+        },
+      },
+    });
+    expect(res).toEqual([
+      '/app/src',
+      '/app/vite.config.ts',
+      '/app/tsconfig.node.json',
+      '/app/lib',
     ]);
   });
 });
