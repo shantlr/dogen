@@ -27,7 +27,7 @@ COPY --from=install-modules /service/node_modules node_modules
 COPY package.json package.json
 CMD yarn build
 
-FROM node-base AS service
+FROM build AS service
 CMD yarn start
 #<<dogen
 "
@@ -66,7 +66,7 @@ COPY --from=install-modules /service/node_modules node_modules
 COPY package.json package.json
 CMD yarn build
 
-FROM node-base AS service
+FROM build AS service
 CMD yarn start
 #<<dogen
 "
@@ -99,7 +99,7 @@ COPY --from=install-modules /service/node_modules node_modules
 COPY package.json package.json
 CMD yarn build
 
-FROM node-base AS service
+FROM build AS service
 CMD yarn start
 #<<dogen
 "
@@ -132,7 +132,7 @@ COPY --from=install-modules /service/node_modules node_modules
 COPY package.json package.json
 CMD yarn build
 
-FROM node-base AS service
+FROM build AS service
 CMD yarn start
 #<<dogen
 "
@@ -165,7 +165,7 @@ COPY --from=install-modules /service/node_modules node_modules
 COPY package.json package.json
 CMD yarn build
 
-FROM node-base AS service
+FROM build AS service
 CMD yarn start
 #<<dogen
 "

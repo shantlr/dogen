@@ -23,7 +23,7 @@ export const nodeServicePreset = nodeBuildPreset.extend({
   targets: {
     run: {
       as: ({ config }) => config.run.targetName,
-      from: '@/node',
+      from: '@/build',
       ops: ({ config: { install, run } }) => [
         {
           type: 'CMD',

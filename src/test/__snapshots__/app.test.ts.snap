@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`generateDockerfile should generate dockerfile create-react-app 1`] = `
-"#dogen
+"#>>dogen
 FROM alpine:3.12 AS jq
 RUN apk add --update --no-cache jq
 
@@ -46,7 +46,7 @@ RUN echo -e -n "server {\\n\\
   }\\n\\
 " > /etc/nginx/conf.d/default.conf
 EXPOSE 80
-#enddogen
+#<<dogen
 "
 `;
 

@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`cli should use custom config path 1`] = `
-"#dogen
+"#>>dogen
 FROM alpine:3.12 AS jq
 RUN apk add --update --no-cache jq
 
@@ -27,8 +27,8 @@ COPY --from=install-modules /service/node_modules node_modules
 COPY package.json package.json
 CMD yarn build
 
-FROM node-base AS service
+FROM build AS service
 CMD yarn start
-#enddogen
+#<<dogen
 "
 `;
