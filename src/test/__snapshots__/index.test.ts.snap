@@ -26,6 +26,9 @@ WORKDIR /service
 COPY --from=install-modules /service/node_modules node_modules
 COPY package.json package.json
 CMD yarn build
+
+FROM node-base AS service
+CMD yarn start
 #enddogen
 "
 `;
@@ -56,6 +59,9 @@ WORKDIR /service
 COPY --from=install-modules /service/node_modules node_modules
 COPY package.json package.json
 CMD yarn build
+
+FROM node-base AS service
+CMD yarn start
 #enddogen
 "
 `;
@@ -86,6 +92,9 @@ WORKDIR /service
 COPY --from=install-modules /service/node_modules node_modules
 COPY package.json package.json
 CMD yarn build
+
+FROM node-base AS service
+CMD yarn start
 #enddogen
 "
 `;

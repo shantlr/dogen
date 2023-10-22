@@ -118,17 +118,6 @@ export const presetToDockerfileTargets = async (
       inputConfig: opt.config,
       projectDir: opt.projectDir,
       packageJson: opt.packageJson,
-      // targets: {
-      //   ...targetAliases,
-      //   ...reduce(
-      //     preset.targets,
-      //     (acc, t, name) => {
-      //       acc[`@/${name}`] = targetAliases[`@${preset.name}/${name}`];
-      //       return acc;
-      //     },
-      //     {} as Record<string, string>
-      //   ),
-      // },
     };
 
     const localTargetAliases = {};
@@ -140,10 +129,11 @@ export const presetToDockerfileTargets = async (
         as: typeof target.as === 'function' ? target.as(input) : target.as,
         from:
           typeof target.from === 'function' ? target.from(input) : target.from,
-        ops:
+        ops: (
           (typeof target.ops === 'function'
             ? await target.ops(input)
-            : target.ops) ?? [],
+            : target.ops) ?? []
+        ).filter((o) => o),
       };
       presetTargets.push(t);
       localTargetAliases[`@/${key}`] = t.as;

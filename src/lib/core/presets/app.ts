@@ -1,5 +1,5 @@
 import z from 'zod';
-import { buildNodeBasePreset } from './node';
+import { nodeBuildPreset } from './nodeBuild';
 import path from 'path';
 import { merge, uniq } from 'lodash';
 import { DockerfileOp } from '../../dockerfile/types';
@@ -46,8 +46,8 @@ const baseAppConfig = zodAutoDefault(
   })
 );
 
-export const baseAppPreset = buildNodeBasePreset.extend({
-  name: 'base-app',
+export const baseAppPreset = nodeBuildPreset.extend({
+  name: 'app-base',
   mapConfigAfter: ({ inputConfig, config }) =>
     merge(config, baseAppConfig.parse(inputConfig)),
   targets: {

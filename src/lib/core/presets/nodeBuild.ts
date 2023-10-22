@@ -114,7 +114,7 @@ const detectPackageManager = async (
   config: Pick<z.output<typeof baseBuildConfig>, 'install'>
 ): Promise<{
   packageManager: string;
-  runScriptCmd: string;
+  runScript: (scriptName: string | null, args?: string) => string;
   files: string[];
   cmd: string;
 }> => {
@@ -128,7 +128,12 @@ const detectPackageManager = async (
 
     return {
       packageManager: 'yarn',
-      runScriptCmd: `yarn`,
+      runScript: (script, args = '') => {
+        if (script == null) {
+          return null;
+        }
+        return `yarn ${script} ${args}`.trim();
+      },
       files: [path.resolve(dir, 'yarn.lock')],
       cmd: flatJoin(cmds, ' '),
     };
@@ -137,7 +142,12 @@ const detectPackageManager = async (
   if (await isFileExists(path.resolve(dir, 'package-npm.lock'))) {
     return {
       packageManager: 'npm',
-      runScriptCmd: `npm run`,
+      runScript: (script, args = '') => {
+        if (script == null) {
+          return null;
+        }
+        return `npm run ${script} ${args}`.trim();
+      },
       files: [path.resolve(dir, 'package-npm.lock')],
       cmd: 'npm install',
     };
@@ -185,8 +195,8 @@ const detectBuildFiles = async (
   return res;
 };
 
-export const buildNodeBasePreset = createPreset({
-  name: 'dogen-node-build-base',
+export const nodeBuildPreset = createPreset({
+  name: 'node-build',
   shouldUsePreset: () => true,
 
   includes: ['dogen-jq'],
@@ -203,13 +213,16 @@ export const buildNodeBasePreset = createPreset({
       install: {
         ...res.install,
         packageManager: install.packageManager,
-        runScriptCmd: install.runScriptCmd,
+        runScript: install.runScript,
         files: install.files,
         cmd: install.cmd,
       },
       build: {
         ...res.build,
-        cmd: res.build.cmd ?? `${install.runScriptCmd} build`,
+        cmd:
+          res.build.cmd ??
+          install.runScript(res.build.script) ??
+          install.runScript('build'),
         files: buildFiles,
       },
     };
@@ -303,22 +316,5 @@ export const buildNodeBasePreset = createPreset({
         },
       ],
     },
-    // run: {
-    //   from: '@this/node',
-    //   ops: ({
-    //     config: {
-    //       run: { cmd, expose },
-    //     },
-    //   }) => [
-    //     {
-    //       type: 'CMD',
-    //       cmd: `${cmd}`,
-    //     },
-    //     typeof expose === 'number' && {
-    //       type: 'EXPOSE',
-    //       port: expose,
-    //     },
-    //   ],
-    // },
   },
 });

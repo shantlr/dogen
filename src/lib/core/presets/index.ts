@@ -1,7 +1,7 @@
 import { craPreset, vitePreset } from './app';
-import { buildNodeBasePreset } from './node';
+import { nodeServicePreset } from './nodeService';
 import { jqPreset } from './utils/jq';
 
-export const defaulPresets = [vitePreset, craPreset, buildNodeBasePreset];
+export const defaulPresets = [vitePreset, craPreset, nodeServicePreset];
 
 export const allPresets = [jqPreset, ...defaulPresets];

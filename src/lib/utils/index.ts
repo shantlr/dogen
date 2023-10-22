@@ -80,7 +80,6 @@ export const flatJoin = (value: StringOrDeepStringArray, sep: string) => {
 
 /**
  * Format command string, if any values is falsy, returned value will be null
- * Can be used to
  */
 export function fcmd(str: string): string | null;
 export function fcmd(
