@@ -1,12 +1,36 @@
 import path from 'path';
 import { findPackageJson } from './packageJson';
-import { appendFile, writeFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import { formatDockerfile } from './dockerfile';
 import { isFileExists } from './utils';
 import { detectDogenConfig } from './dogenConfig';
 import { presetToDockerfileTargets } from './core';
-import { Preset } from './core/presets/createPreset';
+import { AnyPreset } from './core/presets/createPreset';
 import { allPresets, defaulPresets } from './core/presets';
+import { findIndex } from 'lodash';
+
+const START_REGION = '#>>dogen';
+const END_REGION = '#<<dogen';
+
+const removeDogenRange = (content: string) => {
+  const lines = content.split('\n');
+  const startIdx = lines.findIndex((l) => l === START_REGION);
+  if (startIdx === -1) {
+    return content;
+  }
+  const endIdx = findIndex(lines, (l) => l === END_REGION, startIdx);
+
+  if (endIdx === -1) {
+    throw new Error(
+      `Found dogen start region on line '${startIdx}' but did not find end region ('${END_REGION}')`
+    );
+  }
+
+  // remove region
+  lines.splice(startIdx, endIdx - startIdx + 1);
+
+  return lines.join('\n');
+};
 
 export const generateDockerfile = async ({
   dir = process.cwd(),
@@ -21,8 +45,8 @@ export const generateDockerfile = async ({
   rootDir?: string;
   dockerfileConflict?: 'overwrite' | 'append';
 
-  presets?: Preset<any, any, any>[];
-  includablePresets?: Preset<any, any, any>[];
+  presets?: AnyPreset[];
+  includablePresets?: AnyPreset[];
   /**
    * If not provided, will try to autodetect it
    */
@@ -73,7 +97,7 @@ export const generateDockerfile = async ({
   const dockerfilePath = path.resolve(projectDir, 'Dockerfile');
   const alreadyExists = await isFileExists(dockerfilePath);
 
-  const content = `#dogen\n${dockerfile}\n#enddogen\n`;
+  const content = `${START_REGION}\n${dockerfile}\n${END_REGION}\n`;
 
   if (!alreadyExists || dockerfileConflict === 'overwrite') {
     await writeFile(dockerfilePath, content);
@@ -82,9 +106,19 @@ export const generateDockerfile = async ({
     } else {
       operation = 'created';
     }
-  } else if (dockerfileConflict === 'append') {
+  } else if (alreadyExists && dockerfileConflict === 'append') {
     operation = 'updated';
-    await appendFile(dockerfilePath, `\n${content}`);
+    let currentContent = removeDogenRange(
+      (await readFile(dockerfilePath)).toString()
+    );
+    if (!currentContent) {
+      currentContent = content;
+    } else if (currentContent.endsWith('\n')) {
+      currentContent += content;
+    } else {
+      currentContent += `\n${content}`;
+    }
+    await writeFile(dockerfilePath, currentContent);
   } else {
     throw new Error(`DOCKERFILE_ALREADY_EXISTS`);
   }
