@@ -35,7 +35,7 @@ const cli = async (argv = process.argv) => {
         //#endregion
 
         const { operation, dockerfilePath } = await generateDockerfile({
-          conflict: 'append',
+          dockerfileConflict: 'append',
           config,
         });
         console.log(`Dockerfile ${operation} at ${dockerfilePath}`);

@@ -72,7 +72,11 @@ const formatDockerfileTarget = (target: DockerfileTarget) => {
   const res: string[] = [];
 
   if (target.comment) {
-    res.push(`# ${target.comment}`);
+    const c =
+      typeof target.comment === 'string'
+        ? target.comment
+        : target.comment.join('\n');
+    res.push(...c.split('\n').map((line) => `# ${line}`));
   }
 
   res.push(
@@ -97,7 +101,7 @@ export const copy = (
 
   return {
     type: 'COPY',
-    src: fromPath ? path.relative(fromPath, src) : src,
+    src: fromPath && src.startsWith('/') ? path.relative(fromPath, src) : src,
     dst: Array.isArray(p) ? p[1] : undefined,
   };
 };

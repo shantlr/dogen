@@ -37,3 +37,15 @@ export const findPackageJson = async (
 
   throw new Error('package.json not found');
 };
+
+export const packageHasDependency = (
+  pkg: Pick<PackageJson, 'dependencies' | 'devDependencies'>,
+  dep: string | string[]
+): boolean => {
+  if (typeof dep === 'string') {
+    return Boolean(pkg.dependencies?.[dep] || pkg.devDependencies?.[dep]);
+  }
+  return dep.some((d) =>
+    Boolean(pkg.dependencies?.[d] || pkg.devDependencies?.[d])
+  );
+};

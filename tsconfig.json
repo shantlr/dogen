@@ -8,7 +8,7 @@
     "sourceMap": true,
     "outDir": "build/main",
     "declaration": true,
-    "moduleResolution": "node16",
+    "moduleResolution": "Node",
     "resolveJsonModule": true
   },
   "include": ["src/**/*.ts"],

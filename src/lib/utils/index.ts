@@ -1,4 +1,6 @@
 import { stat } from 'fs/promises';
+import { flattenDeep } from 'lodash';
+import path from 'path';
 
 export const isPathExists = async (path: string) => {
   try {
@@ -25,6 +27,19 @@ export const isFileExists = async (filePath: string) => {
     }
     throw err;
   }
+};
+
+export const filterFilesExists = async (files: string[], dir?: string) => {
+  const res = await Promise.all(
+    files.map(async (f) => {
+      const p = dir ? path.resolve(dir, f) : f;
+      if (await isFileExists(p)) {
+        return f;
+      }
+      return null;
+    })
+  );
+  return res.filter((f) => f) as string[];
 };
 
 export const isSubPath = (refPath: string, p: string) => {
@@ -60,9 +75,7 @@ export const flatJoin = (value: StringOrDeepStringArray, sep: string) => {
   if (typeof value === 'string') {
     return value;
   }
-  return value
-    .map((v: string | StringOrDeepStringArray) => flatJoin(v, sep))
-    .join(sep);
+  return flattenDeep(value).join(sep);
 };
 
 /**

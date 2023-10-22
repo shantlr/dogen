@@ -1,7 +1,7 @@
 export type DockerfileTarget = {
   from: string | DockerfileTarget;
   as: string;
-  comment?: string;
+  comment?: string | string[];
   ops: DockerfileOp[];
 };
 
