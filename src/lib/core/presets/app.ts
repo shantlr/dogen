@@ -107,9 +107,3 @@ export const vitePreset = baseAppPreset.extend({
     return res;
   },
 });
-
-export const nextPreset = vitePreset.extend({
-  name: 'next',
-  shouldUsePreset: ({ packageJson }) =>
-    packageHasDependency(packageJson, 'next'),
-});
