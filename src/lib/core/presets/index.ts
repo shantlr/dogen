@@ -1,10 +1,9 @@
 import { craPreset, vitePreset } from './app';
-import { nextPreset, nextStaticPreset } from './next';
+import { nextPreset } from './next';
 import { nodeServicePreset } from './nodeService';
 import { jqPreset } from './utils/jq';
 
 export const defaulPresets = [
-  nextStaticPreset,
   nextPreset,
   vitePreset,
   craPreset,

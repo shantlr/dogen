@@ -102,11 +102,22 @@ const baseBuildConfig = z.object({
       })
       .optional()
   ),
-  postBuild: z
-    .object({
-      includes: z.string(),
-    })
-    .optional(),
+  postBuild: zodAutoDefault(
+    z
+      .object({
+        includes: z.string().optional(),
+        copy: z
+          .object({
+            from: z.string().optional(),
+            src: z.string(),
+            dst: z.string(),
+          })
+          .array()
+          .optional()
+          .default([]),
+      })
+      .optional()
+  ),
 });
 
 const detectPackageManager = async (
@@ -292,6 +303,7 @@ export const nodeBuildPreset = createPreset({
         config: {
           container: { workdir },
           build,
+          postBuild,
         },
         projectDir,
       }) => [
@@ -314,6 +326,14 @@ export const nodeBuildPreset = createPreset({
           type: 'CMD',
           cmd: `${build.cmd}`,
         },
+        ...postBuild.copy.map(
+          (c): DockerfileOp => ({
+            type: 'COPY',
+            from: c.from,
+            src: c.src,
+            dst: c.dst,
+          })
+        ),
       ],
     },
   },

@@ -71,12 +71,20 @@ export const generateDockerfile = async ({
   }
   //#endregion
 
-  const selectedPreset = presets.find((p) =>
-    p.shouldUsePreset({ projectDir, packageJson })
-  );
+  let selectedPreset: AnyPreset;
+
+  for (const p of presets) {
+    if (await p.shouldUsePreset({ projectDir, packageJson })) {
+      selectedPreset = p;
+      break;
+    }
+  }
+
   if (!selectedPreset) {
     throw new Error(`NO_COMPATIBLE_PRESET`);
   }
+
+  console.log('Detected preset:', selectedPreset.name);
 
   const config =
     typeof mapConfig === 'function'
