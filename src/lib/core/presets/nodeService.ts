@@ -10,7 +10,7 @@ const serviceConfig = z.object({
         targetName: z.string().optional().default('service'),
         cmd: z.string().optional(),
         script: z.string().optional(),
-        expose: z.number(),
+        expose: z.number().optional(),
       })
       .optional()
   ),
