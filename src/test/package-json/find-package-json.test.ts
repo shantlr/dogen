@@ -1,5 +1,5 @@
 import { vol } from 'memfs';
-import { findPackageJson } from '../../lib/packageJson';
+import { findPackageJson } from '../../lib/package-json';
 
 jest.mock('fs/promises');
 

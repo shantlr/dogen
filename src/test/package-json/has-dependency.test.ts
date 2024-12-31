@@ -1,4 +1,4 @@
-import { packageHasDependency } from '../../lib/packageJson';
+import { packageHasDependency } from '../../lib/package-json';
 
 describe('packageHasDependency', () => {
   it('should return true', () => {

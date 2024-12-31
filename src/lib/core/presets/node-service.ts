@@ -1,5 +1,5 @@
 import { merge } from 'lodash';
-import { nodeBuildPreset } from './nodeBuild';
+import { nodeBuildPreset } from './node-build';
 import { z } from 'zod';
 import { zodAutoDefault } from '../../utils/zod';
 

@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { generateDockerfile } from '../lib';
 import { isFileExists } from '../lib/utils';
-import { parseDogenConfigFile } from '../lib/dogenConfig';
+import { parseDogenConfigFile } from '../lib/dogen-config';
 import { DogenConfig } from '../lib/types';
 
 const cli = async (argv = process.argv) => {

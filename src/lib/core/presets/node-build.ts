@@ -1,6 +1,6 @@
 import z from 'zod';
 import path from 'path';
-import { createPreset } from './createPreset';
+import { createPreset } from './create-preset';
 import { readdir } from 'fs/promises';
 import { zodAutoDefault } from '../../utils/zod';
 import { DockerfileOp, DockerfileRunMount } from '../../dockerfile/types';
@@ -51,7 +51,16 @@ const baseBuildConfig = z.object({
         npmrc: z.union([z.string(), z.boolean()]).nullish(),
         cmd: z.string().nullish(),
 
-        packageManager: z.enum(['npm', 'yarn', 'pnpm']).nullish(),
+        ops: z
+          .object({
+            position: z
+              .enum(['pre-install', 'post-install'])
+              .optional()
+              .default('pre-install'),
+          })
+          .array()
+          .optional()
+          .default([]),
       })
       .optional()
   ).transform((v) => {
@@ -75,16 +84,17 @@ const baseBuildConfig = z.object({
         targetName: z.string().default('build'),
         script: z.string().optional(),
         cmd: z.string().optional(),
+        copy: z.any().array().optional().default([]),
         /**
          * override auto detect files
          */
-        includes: z
+        include: z
           .string()
           .array()
           .or(z.string().transform((v) => [v]))
           .optional()
           .default([]),
-        excludes: z
+        exclude: z
           .string()
           .array()
           .or(z.string().transform((v) => [v]))
@@ -94,7 +104,7 @@ const baseBuildConfig = z.object({
         /**
          * files to includes without overriding auto detect files
          */
-        extraIncludes: z
+        extraInclude: z
           .string()
           .array()
           .or(z.string().transform((v) => [v]))
@@ -105,7 +115,12 @@ const baseBuildConfig = z.object({
   postBuild: zodAutoDefault(
     z
       .object({
-        includes: z.string().optional(),
+        include: z
+          .string()
+          .array()
+          .or(z.string().transform((v) => [v]))
+          .optional()
+          .default([]),
         copy: z
           .object({
             from: z.string().optional(),
@@ -115,6 +130,8 @@ const baseBuildConfig = z.object({
           .array()
           .optional()
           .default([]),
+
+        ops: z.any().array().optional().default([]),
       })
       .optional()
   ),
@@ -171,21 +188,22 @@ const detectBuildFiles = async (
   dir: string,
   config: z.output<typeof baseBuildConfig>
 ) => {
-  const { includes, excludes, extraIncludes } = config.build;
+  const { include, exclude, extraInclude } = config.build;
   // TODO: refacto
   const files = await readdir(dir, { withFileTypes: true });
   const res: string[] = [];
 
-  if (includes?.length) {
-    res.push(...includes.filter((i) => !excludes.includes(i)));
+  if (include?.length) {
+    res.push(...include.filter((i) => !exclude.includes(i)));
   } else {
     // auto detect build files
     for (const file of files) {
       switch (file.name) {
         case 'src':
         case 'tsconfig.json':
+        case 'tsconfig.build.json':
         case '.babelrc': {
-          if (!excludes.includes(file.name)) {
+          if (!exclude.includes(file.name)) {
             res.push(file.name);
           }
           break;
@@ -195,8 +213,8 @@ const detectBuildFiles = async (
     }
   }
 
-  if (extraIncludes?.length) {
-    config.build.extraIncludes.forEach((f) => {
+  if (extraInclude?.length) {
+    extraInclude.forEach((f) => {
       if (!res.includes(f)) {
         res.push(f);
       }
@@ -311,6 +329,12 @@ export const nodeBuildPreset = createPreset({
           type: 'WORKDIR',
           value: workdir,
         },
+        ...build.copy.map((c) => ({
+          type: 'COPY',
+          from: c.from,
+          src: c.src,
+          dst: c.dst,
+        })),
         {
           type: 'COPY',
           from: '@/install',
@@ -323,9 +347,10 @@ export const nodeBuildPreset = createPreset({
         },
         ...build.files.map((f): DockerfileOp => copy(f, projectDir)),
         {
-          type: 'CMD',
+          type: 'RUN',
           cmd: `${build.cmd}`,
         },
+        ...postBuild.include.map((file) => copy(file, projectDir)),
         ...postBuild.copy.map(
           (c): DockerfileOp => ({
             type: 'COPY',
@@ -334,6 +359,7 @@ export const nodeBuildPreset = createPreset({
             dst: c.dst,
           })
         ),
+        ...postBuild.ops,
       ],
     },
   },

@@ -1,5 +1,5 @@
 import { identity } from 'lodash';
-import { PackageJson } from '../../packageJson';
+import { PackageJson } from '../../package-json';
 import { DockerfileOp } from '../../dockerfile/types';
 
 // eslint-disable-next-line @typescript-eslint/ban-types

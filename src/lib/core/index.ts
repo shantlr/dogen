@@ -1,7 +1,7 @@
 import { DepGraph } from 'dependency-graph';
 import { DockerfileTarget } from '../dockerfile/types';
-import { PackageJson } from '../packageJson';
-import { AnyPreset } from './presets/createPreset';
+import { PackageJson } from '../package-json';
+import { AnyPreset } from './presets/create-preset';
 import { keyBy } from 'lodash';
 
 /**

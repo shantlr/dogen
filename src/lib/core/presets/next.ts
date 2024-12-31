@@ -1,6 +1,6 @@
 import { uniq } from 'lodash';
-import { packageHasDependency } from '../../packageJson';
-import { nodeServicePreset } from './nodeService';
+import { packageHasDependency } from '../../package-json';
+import { nodeServicePreset } from './node-service';
 import { filterFilesExists } from '../../utils';
 
 export const nextPreset = nodeServicePreset.extend({

@@ -25,7 +25,7 @@ FROM node-base AS build
 WORKDIR /service
 COPY --from=install-modules /service/node_modules node_modules
 COPY package.json package.json
-CMD yarn build
+RUN yarn build
 
 FROM build AS service
 CMD yarn start
@@ -64,7 +64,7 @@ FROM node-base AS build
 WORKDIR /service
 COPY --from=install-modules /service/node_modules node_modules
 COPY package.json package.json
-CMD yarn build
+RUN yarn build
 
 FROM build AS service
 CMD yarn start
@@ -97,7 +97,7 @@ FROM node-base AS build
 WORKDIR /service
 COPY --from=install-modules /service/node_modules node_modules
 COPY package.json package.json
-CMD yarn build
+RUN yarn build
 
 FROM build AS service
 CMD yarn start
@@ -130,7 +130,7 @@ FROM node-base AS build
 WORKDIR /service
 COPY --from=install-modules /service/node_modules node_modules
 COPY package.json package.json
-CMD yarn build
+RUN yarn build
 
 FROM build AS service
 CMD yarn start
@@ -163,7 +163,7 @@ FROM node-base AS build
 WORKDIR /service
 COPY --from=install-modules /service/node_modules node_modules
 COPY package.json package.json
-CMD yarn build
+RUN yarn build
 
 FROM build AS service
 CMD yarn start

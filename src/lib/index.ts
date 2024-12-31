@@ -1,11 +1,11 @@
 import path from 'path';
-import { findPackageJson } from './packageJson';
+import { findPackageJson } from './package-json';
 import { readFile, writeFile } from 'fs/promises';
 import { formatDockerfile } from './dockerfile';
 import { isFileExists } from './utils';
-import { detectDogenConfig } from './dogenConfig';
+import { detectDogenConfig } from './dogen-config';
 import { presetToDockerfileTargets } from './core';
-import { AnyPreset } from './core/presets/createPreset';
+import { AnyPreset } from './core/presets/create-preset';
 import { allPresets, defaulPresets } from './core/presets';
 import { findIndex } from 'lodash';
 

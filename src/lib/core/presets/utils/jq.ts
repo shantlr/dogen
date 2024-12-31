@@ -1,4 +1,4 @@
-import { createPreset } from '../createPreset';
+import { createPreset } from '../create-preset';
 
 export const jqPreset = createPreset({
   name: 'dogen-jq',

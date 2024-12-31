@@ -1,9 +1,9 @@
 import z from 'zod';
-import { nodeBuildPreset } from './nodeBuild';
+import { nodeBuildPreset } from './node-build';
 import path from 'path';
 import { merge, uniq } from 'lodash';
 import { DockerfileOp } from '../../dockerfile/types';
-import { packageHasDependency } from '../../packageJson';
+import { packageHasDependency } from '../../package-json';
 import { zodAutoDefault } from '../../utils/zod';
 import { filterFilesExists } from '../../utils';
 

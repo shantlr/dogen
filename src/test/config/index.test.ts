@@ -1,5 +1,5 @@
 import { vol } from 'memfs';
-import { detectDogenConfig } from '../../lib/dogenConfig';
+import { detectDogenConfig } from '../../lib/dogen-config';
 
 jest.mock('fs/promises');
 

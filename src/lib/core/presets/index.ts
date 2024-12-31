@@ -1,6 +1,6 @@
 import { craPreset, vitePreset } from './app';
 import { nextPreset } from './next';
-import { nodeServicePreset } from './nodeService';
+import { nodeServicePreset } from './node-service';
 import { jqPreset } from './utils/jq';
 
 export const defaulPresets = [
