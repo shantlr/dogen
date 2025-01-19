@@ -1,13 +1,14 @@
 import { stat } from 'fs/promises';
-import { flattenDeep } from 'lodash';
 import path from 'path';
+
+import { flattenDeep } from 'lodash';
 
 export const isPathExists = async (path: string) => {
   try {
     await stat(path);
     return true;
   } catch (err) {
-    if (err.code === 'ENOENT') {
+    if ((err as { code?: string })?.code === 'ENOENT') {
       return false;
     }
     throw err;
@@ -22,7 +23,7 @@ export const isFileExists = async (filePath: string) => {
     }
     throw new Error(`${filePath} is not a file`);
   } catch (err) {
-    if (err.code === 'ENOENT') {
+    if ((err as { code?: string }).code === 'ENOENT') {
       return false;
     }
     throw err;
@@ -30,6 +31,10 @@ export const isFileExists = async (filePath: string) => {
 };
 
 export const filterFilesExists = async (files: string[], dir?: string) => {
+  if (!files.length) {
+    return [];
+  }
+
   const res = await Promise.all(
     files.map(async (f) => {
       const p = dir ? path.resolve(dir, f) : f;
@@ -37,34 +42,65 @@ export const filterFilesExists = async (files: string[], dir?: string) => {
         return f;
       }
       return null;
-    })
+    }),
   );
   return res.filter((f) => f) as string[];
 };
 
-export const isSubPath = (refPath: string, p: string) => {
-  if (refPath === p) {
-    return false;
-  }
-  const ref = refPath.split('/');
-  const other = p.split('/');
-  if (ref.length > other.length) {
-    return false;
+export const filterFsExists = async (
+  files: (string | { oneOf: string[] })[],
+  dir?: string,
+) => {
+  if (!files.length) {
+    return [];
   }
 
-  for (let i = 0; i < ref.length; i += 1) {
-    if (ref[i] !== other[i]) {
-      return false;
-    }
-  }
-  return true;
+  const filesToMap = dir ? mapToResolvePath(files, dir) : files;
+
+  return filesToMap.reduce(
+    async (acc, f) => {
+      if (typeof f === 'string') {
+        if (await isPathExists(f)) {
+          const res = await acc;
+          res.push(f);
+          return res;
+        }
+      } else if (f && typeof f === 'object' && 'oneOf' in f) {
+        for (const oneOfFile of f.oneOf) {
+          if (await isPathExists(oneOfFile)) {
+            const res = await acc;
+            res.push(oneOfFile);
+            return res;
+          }
+        }
+      }
+
+      return acc;
+    },
+    Promise.resolve([] as string[]),
+  );
 };
 
-export const isSameOrSubPath = (refPath: string, p: string) => {
-  if (refPath === p) {
-    return true;
+export const mapToResolvePath = <
+  T extends string | (string | { oneOf: string[] }),
+>(
+  files: T[] | undefined | null,
+  relativeDir: string,
+): T[] => {
+  if (!files) {
+    return [];
   }
-  return isSubPath(refPath, p);
+
+  return files.map((f) => {
+    if (typeof f === 'string') {
+      return path.resolve(relativeDir, f);
+    }
+    if (typeof f === 'object' && 'oneOf' in f) {
+      return {
+        oneOf: f.oneOf.map((oneOfFile) => path.resolve(relativeDir, oneOfFile)),
+      };
+    }
+  }) as T[];
 };
 
 export type StringOrDeepStringArray =
@@ -86,7 +122,8 @@ export function fcmd(
   str: TemplateStringsArray,
   ...values: (null | undefined | false | string | number | Date)[]
 ): string | null;
-export function fcmd(strs, ...values) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function fcmd(strs: string | TemplateStringsArray, ...values: any[]) {
   if (typeof strs === 'string') {
     return strs;
   }

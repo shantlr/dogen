@@ -1,5 +1,14 @@
+export const DockerfileTargetGetName = Symbol('DockerfileTargetGetName');
+
+export type DockerfileTargetRef =
+  | string
+  | DockerfileTarget
+  | {
+      [DockerfileTargetGetName](): string;
+    };
+
 export type DockerfileTarget = {
-  from: string | DockerfileTarget;
+  from: DockerfileTargetRef;
   as: string;
   comment?: string | string[];
   ops: DockerfileOp[];
@@ -33,12 +42,11 @@ export type DockerfileOp =
     }
   | {
       type: 'ENV';
-      name: string;
-      value: string;
+      values: Record<string, string>;
     }
   | {
       type: 'COPY';
-      from?: string | DockerfileTarget;
+      from?: DockerfileTargetRef;
       src: string;
       dst?: string;
     }

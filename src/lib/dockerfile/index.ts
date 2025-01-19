@@ -1,5 +1,25 @@
 import path from 'path';
-import { DockerfileOp, DockerfileTarget } from './types';
+
+import { uniq } from 'lodash';
+
+import { DockerfileOp, DockerfileTarget, DockerfileTargetRef } from './types';
+
+const formatTargetRef = (ref: DockerfileTargetRef): string => {
+  if (
+    ref &&
+    typeof ref === 'object' &&
+    'as' in ref &&
+    typeof ref.as === 'string'
+  ) {
+    return ref.as;
+  }
+
+  if (typeof ref === 'string') {
+    return ref;
+  }
+
+  throw new Error(`Cannot format target ref: ${JSON.stringify(ref)}`);
+};
 
 const formatOp = (op: DockerfileOp): string => {
   switch (op.type) {
@@ -13,14 +33,15 @@ const formatOp = (op: DockerfileOp): string => {
       return `EXPOSE ${op.port}${op.protocol ? `/${op.protocol}` : ''}`;
     }
     case 'ENV': {
-      return `ENV ${op.name}=${op.value}`;
+      return `ENV ${Object.entries(op.values)
+        .map(([name, value]) => `${name}=${value}`)
+        .join(' ')}`;
     }
     case 'COPY': {
       const params = [];
-      if (typeof op.from === 'string') {
-        params.push(`--from=${op.from}`);
-      } else if (op.from?.as) {
-        params.push(`--from=${op.from.as}`);
+
+      if (op.from) {
+        params.push(`--from=${formatTargetRef(op.from)}`);
       }
 
       params.push(op.src);
@@ -29,6 +50,7 @@ const formatOp = (op: DockerfileOp): string => {
       } else {
         params.push(op.src);
       }
+
       return `COPY ${params.join(' ')}`;
     }
     case 'CMD': {
@@ -44,7 +66,7 @@ const formatOp = (op: DockerfileOp): string => {
         params.push(
           `--mount=type=${m.type},id=${m.id},dst=${m.dst}${
             m.readOnly ? `,ro=true` : ''
-          }`
+          }`,
         );
       });
 
@@ -52,16 +74,14 @@ const formatOp = (op: DockerfileOp): string => {
         params.push(op.cmd);
       } else {
         params.push(
-          `[${op.cmd.map((c) => `"${c.replace(/\n/g, '\\\n')}"`).join(',')}]`
+          `[${op.cmd.map((c) => `"${c.replace(/\n/g, '\\\n')}"`).join(',')}]`,
         );
       }
 
       return `RUN ${params.join(' ')}`;
     }
     case 'WRITE_FILE': {
-      return `RUN echo -e -n "${op.content.replace(/\n/g, '\\n\\\n')}" > ${
-        op.dst
-      }`;
+      return `COPY <<-"EOT" ${op.dst}\n${op.content}\nEOT`;
     }
     default:
   }
@@ -80,10 +100,8 @@ const formatDockerfileTarget = (target: DockerfileTarget) => {
   }
 
   res.push(
-    `FROM ${
-      typeof target.from === 'string' ? target.from : target.from.as
-    } AS ${target.as}`,
-    ...target.ops.map((o) => formatOp(o))
+    `FROM ${formatTargetRef(target.from)} AS ${target.as}`,
+    ...target.ops.map((o) => formatOp(o)),
   );
 
   return res.join('\n');
@@ -95,7 +113,7 @@ export const formatDockerfile = (targets: DockerfileTarget[]): string => {
 
 export const copy = (
   p: string | [string, string],
-  fromPath?: string
+  fromPath?: string,
 ): DockerfileOp & { type: 'COPY' } => {
   const src = Array.isArray(p) ? p[0] : p;
 
@@ -104,4 +122,26 @@ export const copy = (
     src: fromPath && src.startsWith('/') ? path.relative(fromPath, src) : src,
     dst: Array.isArray(p) ? p[1] : undefined,
   };
+};
+
+export const copies = (
+  files: string[],
+  {
+    dockerContextRoot,
+    srcRoot,
+  }: {
+    dockerContextRoot?: string;
+    srcRoot?: string;
+  } = {},
+) => {
+  return uniq(files).map(
+    (f): DockerfileOp => ({
+      type: 'COPY',
+      src:
+        dockerContextRoot && f.startsWith(dockerContextRoot)
+          ? path.relative(dockerContextRoot, f)
+          : f,
+      dst: srcRoot ? path.relative(srcRoot, f) : f,
+    }),
+  );
 };

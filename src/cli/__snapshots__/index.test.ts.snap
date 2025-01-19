@@ -1,0 +1,33 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`cli > should create dockerfile 1`] = `
+"#>>dogen
+FROM alpine:3.12 AS jq
+RUN apk add --update --no-cache jq
+
+FROM node:22-alpine AS base_node
+
+# Extract minimal fields for dependencies installation
+# This step avoid reinstalling node_modules due to field that is unrelated
+FROM jq AS extract_deps
+COPY ../../app/package.json /tmp/package.json
+RUN jq '{name, dependencies, devDependencies}' < /tmp/package.json > /tmp/deps.json
+
+# Install node_modules
+FROM base_node AS install_modules
+WORKDIR /app
+COPY --from=extract_deps /tmp/deps.json package.json
+COPY /app/yarn.lock yarn.lock
+RUN ["/bin/sh","-c","yarn","install","--pure-lockfile","--non-interactive","--cache-folder","./.ycache","&&","rm","-rf","./.ycache"]
+
+# Build
+FROM install_modules AS build
+WORKDIR /app
+COPY /app/package.json package.json
+RUN ["yarn","run","build"]
+
+FROM build AS service
+CMD ["yarn","run","start"]
+#<<dogen
+"
+`;

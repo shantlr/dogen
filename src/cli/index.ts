@@ -1,46 +1,54 @@
 import { Command } from 'commander';
+import debug, { Debugger } from 'debug';
+
 import { generateDockerfile } from '../lib';
-import { isFileExists } from '../lib/utils';
-import { parseDogenConfigFile } from '../lib/dogen-config';
-import { DogenConfig } from '../lib/types';
+import { detectPreset } from '../lib/core/presets';
 
 const cli = async (argv = process.argv) => {
   const prog = new Command();
 
   prog
-    .command('gen [config-path]', {
+    .command('gen', {
       isDefault: true,
     })
     .description(`generate Dockerfile (default command)`)
+    .option('-v, --verbose', 'Verbose output')
+    // .option('-c, --config <path>', 'Path to config file')
     .option(
       '-w, --wizard',
-      'Start with wizard, this is activated by default when no configuration is provided or detected'
+      'Start with wizard, this is activated by default when no configuration is provided or detected',
     )
-    .action(async (configPath?: string) => {
+    .action(async (options: { verbose?: boolean; config?: string }) => {
       try {
-        if (configPath && !(await isFileExists(configPath))) {
-          console.error(`config does not exists at '${configPath}'`);
+        let logger: Debugger | undefined;
+
+        if (options.verbose) {
+          debug.enable('dogen:*');
+          logger = debug('dogen');
+        }
+
+        // if (options?.config && !(await isFileExists(options?.config))) {
+        //   console.error(`config does not exists at '${options?.config}'`);
+        //   process.exit(1);
+        // }
+        const res = await detectPreset.run({
+          dir: process.cwd(),
+          rootDir: process.env.HOME || '/',
+          logger,
+        });
+
+        if (res.handled) {
+          await generateDockerfile({
+            targets: res.data.targets,
+            outputDir: res.data.dockerfileOutputDir,
+            onConflict: 'append',
+          });
+        } else {
+          console.error(`Could not detect any preset`);
           process.exit(1);
         }
-
-        let config: DogenConfig = undefined;
-        //#region Parse provided config
-        if (configPath) {
-          const parsed = await parseDogenConfigFile(configPath);
-          config = parsed.config;
-          if (parsed.warnings.length) {
-            console.warn(parsed.warnings.map((c) => `WARN: ${c}`).join('\n'));
-          }
-        }
-        //#endregion
-
-        const { operation, dockerfilePath } = await generateDockerfile({
-          dockerfileConflict: 'append',
-          config,
-        });
-        console.log(`Dockerfile ${operation} at ${dockerfilePath}`);
       } catch (err) {
-        switch (err?.message) {
+        switch ((err as Error)?.message) {
           case 'DOCKERFILE_ALREADY_EXISTS': {
             console.error(`ERROR: Dockerfile already exists`);
             return;

@@ -1,18 +1,17 @@
-import path from 'path';
-import { findPackageJson } from './package-json';
 import { readFile, writeFile } from 'fs/promises';
+import path from 'path';
+
+import { findIndex, map } from 'lodash';
+
+import { Target } from './core/presets/types';
 import { formatDockerfile } from './dockerfile';
+import { DockerfileTarget } from './dockerfile/types';
 import { isFileExists } from './utils';
-import { detectDogenConfig } from './dogen-config';
-import { presetToDockerfileTargets } from './core';
-import { AnyPreset } from './core/presets/create-preset';
-import { allPresets, defaulPresets } from './core/presets';
-import { findIndex } from 'lodash';
 
 const START_REGION = '#>>dogen';
 const END_REGION = '#<<dogen';
 
-const removeDogenRange = (content: string) => {
+const removeGeneratedDockerfileDogenRange = (content: string) => {
   const lines = content.split('\n');
   const startIdx = lines.findIndex((l) => l === START_REGION);
   if (startIdx === -1) {
@@ -22,7 +21,7 @@ const removeDogenRange = (content: string) => {
 
   if (endIdx === -1) {
     throw new Error(
-      `Found dogen start region on line '${startIdx}' but did not find end region ('${END_REGION}')`
+      `Found dogen start region on line '${startIdx}' but did not find end region ('${END_REGION}')`,
     );
   }
 
@@ -33,91 +32,39 @@ const removeDogenRange = (content: string) => {
 };
 
 export const generateDockerfile = async ({
-  dir = process.cwd(),
-  rootDir = process.env.HOME ?? '/',
-  dockerfileConflict,
-  config: customConfig,
-  presets = defaulPresets,
-  mapConfig,
-  includablePresets = allPresets,
+  targets,
+  outputDir,
+  onConflict,
 }: {
-  dir?: string;
-  rootDir?: string;
-  dockerfileConflict?: 'overwrite' | 'append';
-
-  presets?: AnyPreset[];
-  includablePresets?: AnyPreset[];
-  /**
-   * If not provided, will try to autodetect it
-   */
-  config?: Record<string, any>;
-  /**
-   * map provided config or autodetected config
-   */
-  mapConfig?: (
-    detectedConfig: Record<string, any>
-  ) => Record<string, any> | Promise<Record<string, any>>;
+  targets: Record<string, Target>;
+  outputDir: string;
+  onConflict?: 'overwrite' | 'append';
 }) => {
-  const { dir: projectDir, packageJson } = await findPackageJson(dir, rootDir);
-
-  let inputConfig = customConfig;
-  //#region Autodetect config if not provided
-  if (!inputConfig) {
-    const { config, warnings } = await detectDogenConfig(projectDir);
-    inputConfig = config;
-    if (warnings.length) {
-      console.log(warnings.map((w) => `WARN: ${w}`).join('\n'));
-    }
-  }
-  //#endregion
-
-  let selectedPreset: AnyPreset;
-
-  for (const p of presets) {
-    if (await p.shouldUsePreset({ projectDir, packageJson })) {
-      selectedPreset = p;
-      break;
-    }
-  }
-
-  if (!selectedPreset) {
-    throw new Error(`NO_COMPATIBLE_PRESET`);
-  }
-
-  console.log('Detected preset:', selectedPreset.name);
-
-  const config =
-    typeof mapConfig === 'function'
-      ? await mapConfig(inputConfig)
-      : inputConfig;
-
-  const targets = await presetToDockerfileTargets(selectedPreset, {
-    config: config ?? {},
-    projectDir,
-    packageJson,
-    includable: includablePresets,
-  });
-  const dockerfile = formatDockerfile(targets);
+  const dockerfileTargets: DockerfileTarget[] = map(targets, (t) => ({
+    ...t,
+    ops: t.ops?.filter((op) => op != null && op !== false) ?? [],
+  }));
+  const dockerfile = formatDockerfile(dockerfileTargets);
 
   let operation: 'created' | 'updated';
 
   //#region Write/Append Dockerfile
-  const dockerfilePath = path.resolve(projectDir, 'Dockerfile');
+  const dockerfilePath = path.resolve(outputDir, 'Dockerfile');
   const alreadyExists = await isFileExists(dockerfilePath);
 
   const content = `${START_REGION}\n${dockerfile}\n${END_REGION}\n`;
 
-  if (!alreadyExists || dockerfileConflict === 'overwrite') {
+  if (!alreadyExists || onConflict === 'overwrite') {
     await writeFile(dockerfilePath, content);
     if (alreadyExists) {
       operation = 'updated';
     } else {
       operation = 'created';
     }
-  } else if (alreadyExists && dockerfileConflict === 'append') {
+  } else if (alreadyExists && onConflict === 'append') {
     operation = 'updated';
-    let currentContent = removeDogenRange(
-      (await readFile(dockerfilePath)).toString()
+    let currentContent = removeGeneratedDockerfileDogenRange(
+      (await readFile(dockerfilePath)).toString(),
     );
     if (!currentContent) {
       currentContent = content;

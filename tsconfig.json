@@ -1,15 +1,17 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "ES2018",
     "allowJs": true,
     "module": "commonjs",
     "skipLibCheck": true,
+    "strict": true,
     "esModuleInterop": true,
     "sourceMap": true,
     "outDir": "build/main",
     "declaration": true,
     "moduleResolution": "Node",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "types": ["vitest/globals"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules/"]
