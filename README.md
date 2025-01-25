@@ -20,6 +20,7 @@ But you can be configure the Dockerfile generation using a `.dogenrc` at the roo
 
 ```jsonc
 {
+  "$schema": "https://raw.githubusercontent.com/shantlr/dogen/refs/heads/main/schemas/dogen-config.schema.json",
   "node": {
     "from": "node:current-alpine"
   },
