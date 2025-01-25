@@ -200,7 +200,6 @@ export const yarnWorkspacePreset = createPreset({
         continue;
       }
 
-      console.log(res.data);
       dockerignore.push(...(res.data.dockerignore ?? []));
 
       const firstKey = Object.keys(res.data.targets)[0];

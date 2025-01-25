@@ -349,3 +349,30 @@ export const extendInput = (
 
   return res;
 };
+
+export const addSrcFilesBasedOnDeps = (deps: {
+  [dependencyName: string]: string[];
+}): JSBuildPresetInput['onProjectFound'] => {
+  return async (project: { packageJson: PackageJson }) => {
+    const additionalFiles: string[] = [];
+    for (const [depName, files] of Object.entries(deps)) {
+      if (packageHasDependency(project.packageJson, depName)) {
+        additionalFiles.push(...files);
+      }
+    }
+
+    if (!additionalFiles.length) {
+      return {};
+    }
+
+    return {
+      config: {
+        append: {
+          build: {
+            src_detect_additional_files: additionalFiles,
+          },
+        },
+      },
+    };
+  };
+};

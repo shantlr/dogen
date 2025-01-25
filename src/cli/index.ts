@@ -55,7 +55,6 @@ const cli = async (argv = process.argv) => {
         });
 
         if (res.handled) {
-          console.log(res.data);
           await generateDockerfile({
             targets: res.data.targets,
             dockerignore: res.data.dockerignore,

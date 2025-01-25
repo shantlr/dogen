@@ -1,4 +1,8 @@
-import { extendInput, jsBuildPreset } from '../common/js-build';
+import {
+  addSrcFilesBasedOnDeps,
+  extendInput,
+  jsBuildPreset,
+} from '../common/js-build';
 import { PresetInput } from '../types';
 import { createPreset } from '../utils/create-preset';
 import { createTarget } from '../utils/create-target';
@@ -7,19 +11,31 @@ export const nodeServicePreset = createPreset({
   name: 'dogen/js/node-service',
   run: async (input: PresetInput<typeof jsBuildPreset>) => {
     const res = await jsBuildPreset.run(
-      extendInput(input, {
-        onProjectFound: () => {
-          return {
-            config: {
-              default: {
-                run: {
-                  script: 'start',
+      extendInput(
+        input,
+        {
+          onProjectFound: () => {
+            return {
+              config: {
+                default: {
+                  run: {
+                    script: 'start',
+                  },
                 },
               },
-            },
-          };
+            };
+          },
         },
-      }),
+        {
+          onProjectFound: addSrcFilesBasedOnDeps({
+            'drizzle-orm': [
+              'drizzle',
+              'drizzle.config.ts',
+              'drizzle.config.js',
+            ],
+          }),
+        },
+      ),
     );
     if (!res.handled) {
       return res;
