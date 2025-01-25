@@ -1,0 +1,329 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "node": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "base image/target to use"
+        },
+        "version": {
+          "type": "string",
+          "description": "node version to use. Ignored if `from` is provided"
+        },
+        "setup_package_manager_version": {
+          "type": "boolean",
+          "description": "add package manager version setup"
+        }
+      },
+      "required": [
+        "from"
+      ]
+    },
+    "target_prefix": {
+      "type": "string"
+    },
+    "package_manager": {
+      "enum": [
+        "npm",
+        "yarn@1",
+        "yarn@4"
+      ],
+      "description": "package manager to use"
+    },
+    "container": {
+      "type": "object",
+      "properties": {
+        "workdir": {
+          "type": "string",
+          "description": "directory where to setup the project in the built image."
+        }
+      },
+      "required": []
+    },
+    "extract_deps": {
+      "type": "object",
+      "properties": {
+        "jq_image_name": {
+          "type": "string"
+        },
+        "target_name": {
+          "type": "string"
+        }
+      },
+      "required": []
+    },
+    "install": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "base image/target to use"
+        },
+        "target_name": {
+          "type": "string",
+          "description": "target name"
+        },
+        "cmd": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "from"
+      ]
+    },
+    "build": {
+      "type": "object",
+      "properties": {
+        "target_name": {
+          "type": "string"
+        },
+        "cmd": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "script": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_dir": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "src_files": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "src_copy_from": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "description": "from docker target name"
+                  },
+                  "src": {
+                    "type": "string"
+                  },
+                  "dst": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "from",
+                  "src",
+                  "dst"
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "src_additional_files": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "src_detect_additional_files": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "oneOf": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "oneOf"
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "post_files": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "post_additional_files": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "post_detect_additional_files": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "post_copy_from": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "description": "from docker target name"
+                  },
+                  "src": {
+                    "type": "string"
+                  },
+                  "dst": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "from",
+                  "src",
+                  "dst"
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": []
+    },
+    "run": {
+      "type": "object",
+      "properties": {
+        "target_name": {
+          "type": "string"
+        },
+        "cmd": {
+          "type": "string"
+        },
+        "script": {
+          "type": "string"
+        },
+        "expose": {
+          "type": "number"
+        }
+      },
+      "required": []
+    },
+    "serve": {
+      "type": "object",
+      "properties": {
+        "from_image": {
+          "type": "string"
+        },
+        "config": {
+          "type": "string"
+        },
+        "config_dst": {
+          "type": "string"
+        },
+        "target_name": {
+          "type": "string"
+        },
+        "cmd": {
+          "type": "string"
+        },
+        "script": {
+          "type": "string"
+        },
+        "expose": {
+          "type": "number"
+        }
+      },
+      "required": []
+    }
+  },
+  "required": []
+}

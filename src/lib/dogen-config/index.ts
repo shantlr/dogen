@@ -15,18 +15,20 @@ export const CONFIG_FILE_NAMES = [
 ];
 
 const copyFromSchema = v.object({
-  from: v.string(),
+  from: v.pipe(v.string(), v.description('from docker target name')),
   src: v.string(),
   dst: v.string(),
 });
 
-const baseSchema = v.object({
+const targetFromSchema = v.pipe(
+  v.string(),
+  v.description('base image/target to use'),
+);
+
+export const dogenConfigBaseSchema = v.object({
   node: v.optional(
     v.object({
-      from: v.pipe(
-        v.optional(v.string()),
-        v.description('base node image to use'),
-      ),
+      from: targetFromSchema,
       version: v.pipe(
         v.optional(v.string()),
         v.description('node version to use. Ignored if `from` is provided'),
@@ -39,11 +41,19 @@ const baseSchema = v.object({
   ),
   target_prefix: v.optional(v.string()),
 
-  package_manager: v.optional(v.picklist(['npm', 'yarn@1', 'yarn@4'])),
+  package_manager: v.pipe(
+    v.optional(v.picklist(['npm', 'yarn@1', 'yarn@4'])),
+    v.description('package manager to use'),
+  ),
 
   container: v.optional(
     v.object({
-      workdir: v.optional(v.string()),
+      workdir: v.pipe(
+        v.optional(v.string()),
+        v.description(
+          'directory where to setup the project in the built image.',
+        ),
+      ),
     }),
   ),
 
@@ -56,8 +66,8 @@ const baseSchema = v.object({
 
   install: v.optional(
     v.object({
-      from: v.optional(v.string()),
-      target_name: v.optional(v.string()),
+      from: targetFromSchema,
+      target_name: v.pipe(v.optional(v.string()), v.description('target name')),
       // keep_cache: v.optional(v.boolean()),
       // npmrc: v.optional(v.union(v.string(), v.boolean())),
       cmd: v.optional(v.string()),
@@ -140,7 +150,7 @@ export const DOGEN_DEFAULT_CONFIG = {
   },
 };
 
-export type DogenConfig = v.InferOutput<typeof baseSchema>;
+export type DogenConfig = v.InferOutput<typeof dogenConfigBaseSchema>;
 export type DogenConfigDeepOptional = DeepOptional<DogenConfig>;
 export type DogenConfigAppend = Appendable<DogenConfig>;
 
@@ -154,7 +164,7 @@ export type ExtendMutateConfig = {
 const assertDogenConfig = async (content: unknown) => {
   const warnings: string[] = [];
 
-  const parsed = v.parse(baseSchema, content);
+  const parsed = v.parse(dogenConfigBaseSchema, content);
   // if (parsed.build?.cmd && parsed.build?.script) {
   //   warnings.push(
   //     `config 'build.script' will be ignored: both 'build.cmd' and 'build.script' has been provided`,

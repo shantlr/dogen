@@ -11,6 +11,7 @@
     "src"
   ],
   "scripts": {
+    "gen:config:schema": "ts-node ./src/scripts/to-jsonschema.ts",
     "build": "tsup",
     "prepare": "yarn build",
     "ts-check": "tsc --noEmit",
@@ -32,6 +33,7 @@
     "@types/debug": "^4",
     "@types/lodash": "^4.14.195",
     "@types/node": "^20.2.5",
+    "@valibot/to-json-schema": "^1.0.0-beta.5",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.31.0",

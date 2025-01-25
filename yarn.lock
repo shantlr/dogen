@@ -1049,6 +1049,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@valibot/to-json-schema@npm:^1.0.0-beta.5":
+  version: 1.0.0-beta.5
+  resolution: "@valibot/to-json-schema@npm:1.0.0-beta.5"
+  peerDependencies:
+    valibot: ^1.0.0 || ^1.0.0-beta.5 || ^1.0.0-rc
+  checksum: 10c0/d3aa20e455ac7d5718f46466c7f9f4f0613a6cb803bebcfe2e48ebf46ce8287a47229bb5952449371808ad2671eb88e5a141df24f152d4112e01e8dd90247ae8
+  languageName: node
+  linkType: hard
+
 "@vitest/expect@npm:3.0.2":
   version: 3.0.2
   resolution: "@vitest/expect@npm:3.0.2"
@@ -1713,6 +1722,7 @@ __metadata:
     "@types/debug": "npm:^4"
     "@types/lodash": "npm:^4.14.195"
     "@types/node": "npm:^20.2.5"
+    "@valibot/to-json-schema": "npm:^1.0.0-beta.5"
     commander: "npm:^10.0.1"
     debug: "npm:^4.4.0"
     dependency-graph: "npm:^0.11.0"
@@ -1735,7 +1745,7 @@ __metadata:
     yup: "npm:^1.2.0"
     zod: "npm:^3.22.4"
   bin:
-    dogen: ./bin/index.js
+    dogen: ./build/cli.mjs
   languageName: unknown
   linkType: soft
 
