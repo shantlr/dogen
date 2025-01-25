@@ -8,9 +8,11 @@ export interface PackageJson {
   version: string;
   private?: string;
   main?: string;
-
   workspaces?: {
     packages?: string[];
+  };
+  engines?: {
+    node?: string;
   };
   packageManager?: string;
 

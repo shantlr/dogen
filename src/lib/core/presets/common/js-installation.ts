@@ -1,6 +1,7 @@
 import path from 'path';
 
 import { Debugger } from 'debug';
+import { execa } from 'execa';
 
 import { copies } from '../../../dockerfile';
 import { PackageManagerName, DogenConfig } from '../../../dogen-config';
@@ -118,6 +119,43 @@ async function detectPackageManager({
   throw new Error(`Unable to detect used package manager at '${dir}'`);
 }
 
+const detectNodeVersion = async (project: {
+  dir: string;
+  packageJson: PackageJson;
+}) => {
+  if ('volta' in project.packageJson) {
+    const volta = project.packageJson.volta as {
+      node?: string;
+    };
+    if (volta?.node) {
+      return volta.node;
+    }
+  }
+
+  if (project.packageJson.engines?.node) {
+    const match = project.packageJson.engines.node.match(
+      /(?<version>\d+\.\d+\.\d+)/,
+    );
+    if (match?.groups?.version) {
+      return match.groups.version;
+    }
+  }
+
+  try {
+    const { stdout } = await execa({
+      cwd: project.dir,
+    })`node --version`;
+    const match = stdout.match(/v(?<version>\d+\.\d+\.\d+)/);
+    if (match?.groups?.version) {
+      return match.groups.version;
+    }
+  } catch {
+    //
+  }
+
+  return 'latest';
+};
+
 export const jsInstallationPreset = createPreset({
   name: 'dogen/js/installation',
   run: async ({
@@ -155,6 +193,23 @@ export const jsInstallationPreset = createPreset({
     log?.(
       `detected package manager: ${packageManager.name}(${packageManager.version ?? '<no-specific-version>'})`,
     );
+
+    //#region Detect node version
+    let nodeImage: string | undefined =
+      dogenConfig.node?.from ??
+      (dogenConfig.node?.version
+        ? `node:${dogenConfig.node.version}-alpine`
+        : undefined);
+    if (!dogenConfig.node?.from && !dogenConfig.node?.version) {
+      const detectedNodeVersion = await detectNodeVersion(project);
+      nodeImage = `node:${detectedNodeVersion}-alpine`;
+      log?.(`detected node version: ${detectedNodeVersion}`);
+    }
+    //#endregion
+    if (!nodeImage) {
+      throw new Error('Unable to detect node image');
+    }
+
     const targetJq = dogenConfig.extract_deps?.jq_image_name
       ? createTarget({
           from: dogenConfig.extract_deps.jq_image_name,
@@ -167,7 +222,7 @@ export const jsInstallationPreset = createPreset({
         });
 
     const targetNode = createTarget({
-      from: dogenConfig.node!.from!,
+      from: nodeImage,
       as: 'base_node',
       ops: [
         ...(packageManager.name === 'yarn@4' &&

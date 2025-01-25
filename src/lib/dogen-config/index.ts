@@ -24,6 +24,7 @@ const baseSchema = v.object({
   node: v.optional(
     v.object({
       from: v.optional(v.string()),
+      version: v.optional(v.string()),
       setupPackageManagerVersion: v.optional(v.boolean()),
     }),
   ),
@@ -107,9 +108,7 @@ const baseSchema = v.object({
 });
 
 export const DOGEN_DEFAULT_CONFIG = {
-  node_image: 'node:22-alpine',
   node: {
-    from: 'node:22-alpine',
     setupPackageManagerVersion: true,
   },
   container: {

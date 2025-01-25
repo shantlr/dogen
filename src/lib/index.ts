@@ -59,7 +59,7 @@ const writeDogenContent = async ({
     );
     if (!currentContent) {
       currentContent = content;
-    } else if (currentContent.endsWith('\n')) {
+    } else if (currentContent.endsWith('\n\n')) {
       currentContent += content;
     } else {
       currentContent += `\n${content}`;
