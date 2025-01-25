@@ -218,7 +218,7 @@ export const jsBuildPreset = createPreset({
               {
                 type: 'RUN' as const,
                 cmd: packageManager.runScript(
-                  dogenConfig?.build?.script ?? 'build',
+                  dogenConfig?.build?.script ?? ['build'],
                 ),
               },
             ]),

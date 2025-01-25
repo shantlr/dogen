@@ -24,7 +24,7 @@ export const expoWebPreset = createPreset({
                 default: {
                   build: {
                     output_dir: 'dist',
-                    script: 'expo export -p web',
+                    script: ['expo', 'export', '-p', 'web'],
                   },
                 },
                 append: {

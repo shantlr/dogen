@@ -15,7 +15,7 @@ type PackageManager = {
   name: PackageManagerName;
   version?: string;
   installModules: (opt?: { noCache?: boolean }) => string[];
-  runScript: (scriptName: string, args?: string[]) => string[];
+  runScript: (script: string | string[]) => string | string[];
   installFiles: string[];
 };
 const getPackageManager = ({
@@ -33,8 +33,11 @@ const getPackageManager = ({
         installModules: () => {
           return ['npm', 'install'];
         },
-        runScript: (scriptName, args = []) => {
-          return ['npm', 'run', scriptName, ...args];
+        runScript: (args) => {
+          if (typeof args === 'string') {
+            return `npm run ${args}`;
+          }
+          return ['npm', 'run', ...args];
         },
         installFiles: ['package-lock.json'],
       };
@@ -58,8 +61,11 @@ const getPackageManager = ({
             './.ycache',
           ];
         },
-        runScript: (scriptName, args = []) => {
-          return ['yarn', 'run', scriptName, ...args];
+        runScript: (arg) => {
+          if (typeof arg === 'string') {
+            return `yarn run ${arg}`;
+          }
+          return ['yarn', 'run', ...arg];
         },
         installFiles: ['yarn.lock'],
       };
@@ -70,8 +76,11 @@ const getPackageManager = ({
         installModules: () => {
           return ['yarn', 'install', '--refresh-lockfile'];
         },
-        runScript: (scriptName, args = []) => {
-          return ['yarn', 'run', scriptName, ...args];
+        runScript: (arg) => {
+          if (typeof arg === 'string') {
+            return `yarn run ${arg}`;
+          }
+          return ['yarn', 'run', ...arg];
         },
         installFiles: ['yarn.lock', '.yarnrc.yml'],
       };

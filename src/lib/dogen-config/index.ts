@@ -59,7 +59,7 @@ const baseSchema = v.object({
     v.object({
       target_name: v.optional(v.string()),
       cmd: v.nullish(v.string()),
-      script: v.nullish(v.string()),
+      script: v.nullish(v.union([v.string(), v.array(v.string())])),
 
       output_dir: v.nullish(v.string()),
 
