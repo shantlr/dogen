@@ -1,3 +1,4 @@
+import { readFile } from 'fs/promises';
 import path from 'path';
 
 import { Debugger } from 'debug';
@@ -123,6 +124,11 @@ const detectNodeVersion = async (project: {
   dir: string;
   packageJson: PackageJson;
 }) => {
+  if (typeof process.env.NODE_ENV === 'string') {
+    const match = process.env.NODE_ENV.match(/(?<version>\d+\.\d+\.\d+)/);
+    return match?.groups?.version;
+  }
+
   if ('volta' in project.packageJson) {
     const volta = project.packageJson.volta as {
       node?: string;
@@ -136,6 +142,20 @@ const detectNodeVersion = async (project: {
     const match = project.packageJson.engines.node.match(
       /(?<version>\d+\.\d+\.\d+)/,
     );
+    if (match?.groups?.version) {
+      return match.groups.version;
+    }
+  }
+  if (await isFileExists('.nvmrc')) {
+    const nvmrc = await readFile('.nvmrc', 'utf-8');
+    const match = nvmrc.match(/(?<version>\d+\.\d+\.\d+)/);
+    if (match?.groups?.version) {
+      return match.groups.version;
+    }
+  }
+  if (await isFileExists('.node-version')) {
+    const nodeVersion = await readFile('.node-version', 'utf-8');
+    const match = nodeVersion.match(/(?<version>\d+\.\d+\.\d+)/);
     if (match?.groups?.version) {
       return match.groups.version;
     }
