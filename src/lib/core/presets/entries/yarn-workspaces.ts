@@ -1,6 +1,7 @@
 import path from 'path';
 
 import { copies } from '../../../dockerfile';
+import { DockerignoreOp } from '../../../dockerfile/types';
 import {
   applyConfigExtensions,
   DOGEN_DEFAULT_CONFIG,
@@ -119,6 +120,8 @@ export const yarnWorkspacePreset = createPreset({
       ],
     );
 
+    const dockerignore: DockerignoreOp[] = [];
+
     // setup workspace root
     //#region workspace root setup
     const workspaceInstallation = await jsInstallationPreset.run({
@@ -197,6 +200,9 @@ export const yarnWorkspacePreset = createPreset({
         continue;
       }
 
+      console.log(res.data);
+      dockerignore.push(...(res.data.dockerignore ?? []));
+
       const firstKey = Object.keys(res.data.targets)[0];
       if (firstKey && res.data.targets[firstKey]) {
         res.data.targets[firstKey].comments = [
@@ -218,6 +224,7 @@ export const yarnWorkspacePreset = createPreset({
       data: {
         targets,
         dockerfileOutputDir: workspace.dir,
+        dockerignore,
       },
     };
   },

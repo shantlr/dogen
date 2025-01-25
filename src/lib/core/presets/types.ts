@@ -1,5 +1,6 @@
 import { ValueOrPromise } from '../../../ts-utils';
 import {
+  DockerignoreOp,
   DockerfileOp,
   DockerfileTargetGetName,
   DockerfileTargetRef,
@@ -18,6 +19,7 @@ export type Target = {
 
 export type AnyPresetOutput = {
   targets: Record<PropertyKey, Target>;
+  dockerignore?: DockerignoreOp[];
 };
 
 export type Preset<

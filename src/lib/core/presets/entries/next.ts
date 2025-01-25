@@ -9,6 +9,7 @@ export const nextPreset = createPreset({
   run: async (input: PresetInput<typeof serveStaticJsBuildPreset>) => {
     return serveStaticJsBuildPreset.run(
       extendInput(input, {
+        dockerignore: ['**/.next'],
         onProjectFound: ({ packageJson }) => {
           if (!packageHasDependency(packageJson, 'next')) {
             return {

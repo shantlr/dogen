@@ -3,6 +3,7 @@ import { cloneDeep } from 'lodash';
 
 import { ValueOrPromise } from '../../../../ts-utils';
 import { copies } from '../../../dockerfile';
+import { DockerignoreOp } from '../../../dockerfile/types';
 import {
   applyConfigExtensions,
   DOGEN_DEFAULT_CONFIG,
@@ -24,6 +25,7 @@ import {
 import { createPreset } from '../utils/create-preset';
 import { createTarget } from '../utils/create-target';
 
+import { COMMON_DOCKERIGNORE } from './dockerignore';
 import { jsInstallationPreset } from './js-installation';
 
 export type JSBuildPresetInput = {
@@ -32,6 +34,7 @@ export type JSBuildPresetInput = {
   logger?: Debugger;
 
   dockerContextRoot?: string;
+  dockerignore?: DockerignoreOp[];
 
   config?: ExtendMutateConfig;
   onProjectFound?: (project: {
@@ -64,6 +67,7 @@ export const jsBuildPreset = createPreset({
     dir,
     rootDir,
     dockerContextRoot = rootDir,
+    dockerignore: inputDockerignore,
     config: configInput,
     onProjectFound,
     onDogenConfig: onDogenConfigDetected,
@@ -144,6 +148,11 @@ export const jsBuildPreset = createPreset({
       };
     }
 
+    const dockerignore: DockerignoreOp[] = [
+      ...COMMON_DOCKERIGNORE,
+      '**/node_modules',
+      ...(inputDockerignore ?? []),
+    ];
     const {
       packageManager,
       targets: {
@@ -246,6 +255,7 @@ export const jsBuildPreset = createPreset({
         dogenConfig,
         packageManager,
         dockerfileOutputDir: project.dir,
+        dockerignore,
         targets: {
           jq: targetJq,
           node: targetNode,
@@ -275,7 +285,7 @@ export const extendInput = (
   input: JSBuildPresetInput,
   ...addons: Pick<
     JSBuildPresetInput,
-    'config' | 'onProjectFound' | 'onDogenConfig'
+    'config' | 'onProjectFound' | 'onDogenConfig' | 'dockerignore'
   >[]
 ): JSBuildPresetInput => {
   if (!addons.length) {
@@ -287,6 +297,9 @@ export const extendInput = (
   for (const addon of addons) {
     if (addon.config) {
       res.config = mergeConfigExtensions([res.config, addon.config]);
+    }
+    if (addon.dockerignore) {
+      res.dockerignore = [...(res.dockerignore ?? []), ...addon.dockerignore];
     }
 
     if (addon.onProjectFound) {

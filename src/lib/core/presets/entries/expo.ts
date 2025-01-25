@@ -9,6 +9,7 @@ export const expoWebPreset = createPreset({
   run: async (input: PresetInput<typeof serveStaticJsBuildPreset>) => {
     const res = await serveStaticJsBuildPreset.run(
       extendInput(input, {
+        dockerignore: ['**/.expo'],
         onProjectFound: ({ packageJson }) => {
           if (!packageHasDependency(packageJson, 'expo')) {
             return {

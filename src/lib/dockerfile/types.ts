@@ -68,3 +68,10 @@ export type DockerfileOp =
 export type DockrefileOps = {
   [key in DockerfileOp['type']]: DockerfileOp & { type: key };
 };
+
+export type DockerignoreOp =
+  | string
+  | {
+      comments?: string[];
+      pattern?: string | string[];
+    };

@@ -1,3 +1,6 @@
+import { readFile } from 'fs/promises';
+import path from 'path';
+
 import { Command } from 'commander';
 import debug, { Debugger } from 'debug';
 
@@ -6,6 +9,20 @@ import { detectPreset } from '../lib/core/presets';
 
 const cli = async (argv = process.argv) => {
   const prog = new Command();
+
+  prog.command('version').action(async () => {
+    try {
+      const file = await readFile(
+        path.resolve(__dirname, '../../../package.json'),
+        'utf-8',
+      );
+      const pkg = JSON.parse(file);
+      console.log(pkg.version);
+    } catch (err) {
+      console.error(err);
+      return;
+    }
+  });
 
   prog
     .command('gen', {
@@ -38,10 +55,12 @@ const cli = async (argv = process.argv) => {
         });
 
         if (res.handled) {
+          console.log(res.data);
           await generateDockerfile({
             targets: res.data.targets,
+            dockerignore: res.data.dockerignore,
             outputDir: res.data.dockerfileOutputDir,
-            onConflict: 'append',
+            mode: 'append',
           });
         } else {
           console.error(`Could not detect any preset`);

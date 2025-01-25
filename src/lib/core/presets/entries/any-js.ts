@@ -1,3 +1,4 @@
+import { DockerignoreOp } from '../../../dockerfile/types';
 import { jsBuildPreset } from '../common/js-build';
 import { Preset, PresetInput, Target } from '../types';
 import { createPreset } from '../utils/create-preset';
@@ -15,6 +16,7 @@ const presets: Preset<
   {
     targets: Record<PropertyKey, Target>;
     dockerfileOutputDir: string;
+    dockerignore?: DockerignoreOp[];
   }
 >[] = [
   expoWebPreset,

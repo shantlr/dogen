@@ -2,7 +2,12 @@ import path from 'path';
 
 import { uniq } from 'lodash';
 
-import { DockerfileOp, DockerfileTarget, DockerfileTargetRef } from './types';
+import {
+  DockerignoreOp,
+  DockerfileOp,
+  DockerfileTarget,
+  DockerfileTargetRef,
+} from './types';
 
 const formatTargetRef = (ref: DockerfileTargetRef): string => {
   if (
@@ -148,4 +153,18 @@ export const copies = (
       dst: srcRoot ? path.relative(srcRoot, f) : f,
     }),
   );
+};
+
+export const formatDockerignore = (config: DockerignoreOp[]) => {
+  return uniq(
+    config.flatMap((c) => {
+      if (typeof c === 'string') {
+        return c;
+      }
+      return [
+        ...(c.comments?.map((c) => `# ${c}`) ?? []),
+        ...(c.pattern ?? []),
+      ];
+    }),
+  ).join('\n');
 };

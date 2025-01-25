@@ -1,5 +1,7 @@
 import { Debugger } from 'debug';
 
+import { DockerignoreOp } from '../../dockerfile/types';
+
 import { anyJsPreset } from './entries/any-js';
 import { yarnWorkspacePreset } from './entries/yarn-workspaces';
 import { Preset, Target } from './types';
@@ -21,6 +23,7 @@ const presets: Preset<
   },
   {
     targets: Record<string, Target>;
+    dockerignore?: DockerignoreOp[];
     dockerfileOutputDir: string;
   }
 >[] = [yarnWorkspacePreset, anyJsPreset];
