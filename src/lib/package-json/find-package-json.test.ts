@@ -24,6 +24,7 @@ describe('findPackageJson', () => {
     expect(await findPackageJson('/app', '/')).toEqual({
       dir: '/app',
       packageJson,
+      packageJsonPath: '/app/package.json',
     });
   });
 
@@ -39,6 +40,7 @@ describe('findPackageJson', () => {
     expect(await findPackageJson('/app/src/config', '/')).toEqual({
       dir: '/app',
       packageJson,
+      packageJsonPath: '/app/package.json',
     });
   });
 
@@ -51,8 +53,6 @@ describe('findPackageJson', () => {
       '/app/package.json': JSON.stringify(packageJson),
     });
 
-    await expect(() =>
-      findPackageJson('/app/src/config', '/app/src'),
-    ).rejects.toThrowError('package.json not found');
+    expect(await findPackageJson('/app/src/config', '/app/src')).toBe(null);
   });
 });
