@@ -214,7 +214,7 @@ export const applyConfigExtensions = (
   const value = cloneDeep(config ?? {});
   for (const extension of extensions) {
     if (extension?.default) {
-      mergeWith(value, extension.default, (objValue, srcValue) => {
+      mergeWith(value, extension.default, (objValue) => {
         if (
           (typeof objValue !== 'object' && objValue != null) ||
           Array.isArray(objValue) ||

@@ -12,6 +12,7 @@ import { jsInstallationPreset } from '../common/js-installation';
 import { PresetInput, Target } from '../types';
 import { createPreset } from '../utils/create-preset';
 import { createTarget, prefixTargetsAsInplace } from '../utils/create-target';
+import { sectionComment } from '../utils/section-comments';
 
 import { anyJsPreset } from './any-js';
 
@@ -138,11 +139,7 @@ export const yarnWorkspacePreset = createPreset({
     }
 
     workspaceInstallation.data.targets.jq.comments = [
-      '##############################################################################',
-      '#',
-      '# Workspace setup',
-      '#',
-      '##############################################################################',
+      ...sectionComment('Workspace setup'),
       ...(workspaceInstallation.data.targets.jq.comments ?? []),
     ];
     appendTargets(targets, workspaceInstallation.data.targets, 'workspace_');
@@ -203,11 +200,7 @@ export const yarnWorkspacePreset = createPreset({
       const firstKey = Object.keys(res.data.targets)[0];
       if (firstKey && res.data.targets[firstKey]) {
         res.data.targets[firstKey].comments = [
-          '##############################################################################',
-          '#',
-          `# Package: ${p.packageJson.name}`,
-          '#',
-          '##############################################################################',
+          ...sectionComment(`Package: ${p.packageJson.name}`),
           ...(res.data.targets[firstKey].comments ?? []),
         ];
       }
