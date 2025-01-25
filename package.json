@@ -17,7 +17,7 @@
     "prepare": "yarn build",
     "ts-check": "tsc --noEmit",
     "cli": "ts-node -e \"import cli from './src/cli/index'; cli(['ts-node', 'dogen', ...process.argv.slice(1)])\" --",
-    "test": "vitest"
+    "test": "vitest --run"
   },
   "dependencies": {
     "commander": "^10.0.1",
