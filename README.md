@@ -15,28 +15,51 @@ cat Dockerfile
 
 ## Dogenrc
 
-Generated Dockerfile can be configured using a `.dogenrc` at root of your project
+By default dogen try to detect the right configuration given the project.
+But you can be configure the Dockerfile generation using a `.dogenrc` at the root of your project
 
 ```jsonc
 {
-  "nodeImage": "node:18-alpine3.17", // custom image to use for installing/building/running your service
+  "node": {
+    "from": "node:current-alpine"
+  },
   "build": {
-    "script": "build:prod" // custom script (defined in your package.json) to call for building your service
+    "script": "build" // custom script (defined in your package.json) to call for building your service
   },
   "run": {
-    "script": "start:prod" // custom script (defined in your package.json) to call for starting your service
+    "script": "start" // custom script (defined in your package.json) to call for starting your service
   }
 }
 ```
 
-### Fields
+### Workspace
+
+In case of a yarn workspace, you can provide a dogen config per package.
+
+### Reference
 
 ```ts
 type DogenConfig = {
   /**
    * customize image used for installing/bulding/running your service
    */
-  nodeImage?: string;
+  node?: {
+    /**
+     * base node image to use
+     */
+    from?: string;
+    /**
+     * node version to use.
+     * ignored if `from` is provided
+     */
+    version? string;
+    /**
+     * add package manager version setup
+     */
+    setup_package_manager_version?: boolean;
+  };
+
+  package_manager?: 'npm' | 'yarn@1' | 'yarn@4';
 
   /**
    * Workdir to use in dockerfile
@@ -50,22 +73,19 @@ type DogenConfig = {
 
   install?: {
     /**
+     * base image used for install step
+     */
+    from?: string;
+    /**
      * customize dockerfile install target name
      */
-    name?: string;
-    /**
-     * keep package manager cache on node_modules installation
-     */
-    keepCache?: boolean;
-    /**
-     * mount a npmrc file when running installation command, npmrc file should be provided during build using secret (e.g `docker build --secret id=npmrc,src=.npmrc [...]`)
-     */
-    npmrc?: boolean | string;
+    target_name?: string;
     /**
      * custom command to run installation
      */
     cmd?: string;
   };
+
   /**
    * Build related target
    */
@@ -73,7 +93,7 @@ type DogenConfig = {
     /**
      * customize dockerfile build target name
      */
-    name?: string;
+    target_name?: string;
     /**
      * name of script present in you package.json to use to build your service. Ignored if `build.cmd` is provided
      */
@@ -83,31 +103,40 @@ type DogenConfig = {
      */
     cmd?: string;
 
+
+    output_dir?: string;
+
     /**
      * files to copy for building service. (by default dogen try to autodetect files that should be copied)
      */
-    includes?: string | string[];
-    /**
-     * excludes files from `build.includes` and `build.extraIncludes`
-     */
-    excludes?: string | string[];
-    /**
-     * additional files to copy for building service.
-     */
-    extraIncludes?: string | string[];
-  };
-  postBuild: {
-    /**
-     * files to copy after your service is built
-     */
-    includes?: string | string[];
+    src_files?: string[];
+    src_additional_files?: string[];
+    src_detect_additional_files?: (string | { oneOf: string[] })[];
+    src_copy_from?: {
+      from: string; // from target name
+      src: string;
+      dst: string;
+    }[]
+
+    post_files?: string[];
+    post_additional_files?: string[];
+    post_detect_additional_files?: string[];
+    post_copy_from?: {
+      from: string; // from target name
+      src: string;
+      dst: string;
+    }[]
   };
 
+  /**
+   * Run service target
+   * Configuration used in case we are building a service like an api
+   */
   run?: {
     /**
      * customize dockerfile run target name
      */
-    name?: string;
+    target_name?: string;
     /**
      * command to use to run your service
      */
@@ -121,5 +150,19 @@ type DogenConfig = {
      */
     expose?: number;
   };
+
+  /**
+   * Serve target
+   * Configuration used in case we building static content to be served behind a reverse proxy
+   */
+  serve?: {
+    from_image?: string;
+    config?: string;
+    config_dst?: string;
+    target_name?: string;
+    cmd?: string;
+    script?: string;
+    expose?: number;
+  }
 };
 ```

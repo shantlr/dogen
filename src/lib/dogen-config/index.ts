@@ -23,9 +23,18 @@ const copyFromSchema = v.object({
 const baseSchema = v.object({
   node: v.optional(
     v.object({
-      from: v.optional(v.string()),
-      version: v.optional(v.string()),
-      setupPackageManagerVersion: v.optional(v.boolean()),
+      from: v.pipe(
+        v.optional(v.string()),
+        v.description('base node image to use'),
+      ),
+      version: v.pipe(
+        v.optional(v.string()),
+        v.description('node version to use. Ignored if `from` is provided'),
+      ),
+      setup_package_manager_version: v.pipe(
+        v.optional(v.boolean()),
+        v.description('add package manager version setup'),
+      ),
     }),
   ),
   target_prefix: v.optional(v.string()),
@@ -109,7 +118,7 @@ const baseSchema = v.object({
 
 export const DOGEN_DEFAULT_CONFIG = {
   node: {
-    setupPackageManagerVersion: true,
+    setup_package_manager_version: true,
   },
   container: {
     workdir: '/app',

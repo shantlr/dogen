@@ -256,7 +256,7 @@ export const jsInstallationPreset = createPreset({
       ops: [
         ...(packageManager.name === 'yarn@4' &&
         packageManager.version &&
-        dogenConfig.node?.setupPackageManagerVersion
+        dogenConfig.node?.setup_package_manager_version
           ? [
               {
                 type: 'ENV' as const,

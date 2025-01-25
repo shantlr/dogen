@@ -176,7 +176,7 @@ export const yarnWorkspacePreset = createPreset({
             package_manager: workspaceInstallation.data.packageManager.name,
             node: {
               from: workspaceInstallation.data.targets.node.as,
-              setupPackageManagerVersion: false,
+              setup_package_manager_version: false,
             },
             container: {
               workdir: path.resolve(
