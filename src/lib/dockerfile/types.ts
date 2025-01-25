@@ -10,7 +10,7 @@ export type DockerfileTargetRef =
 export type DockerfileTarget = {
   from: DockerfileTargetRef;
   as: string;
-  comment?: string | string[];
+  comments?: string | string[];
   ops: DockerfileOp[];
 };
 

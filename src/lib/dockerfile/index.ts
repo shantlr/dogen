@@ -91,12 +91,16 @@ const formatOp = (op: DockerfileOp): string => {
 const formatDockerfileTarget = (target: DockerfileTarget) => {
   const res: string[] = [];
 
-  if (target.comment) {
+  if (target.comments) {
     const c =
-      typeof target.comment === 'string'
-        ? target.comment
-        : target.comment.join('\n');
-    res.push(...c.split('\n').map((line) => `# ${line}`));
+      typeof target.comments === 'string'
+        ? target.comments
+        : target.comments.join('\n');
+    res.push(
+      ...c
+        .split('\n')
+        .map((line) => (line.startsWith('#') ? line : `# ${line}`)),
+    );
   }
 
   res.push(

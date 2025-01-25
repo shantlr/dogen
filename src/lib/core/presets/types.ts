@@ -6,7 +6,10 @@ import {
 } from '../../dockerfile/types';
 
 export type Target = {
-  comment?: string | string[];
+  /**
+   * Comment to append right before the target definition
+   */
+  comments?: string[];
   from: DockerfileTargetRef;
   as: string;
   ops?: (DockerfileOp | undefined | null | false)[];

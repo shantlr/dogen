@@ -137,6 +137,14 @@ export const yarnWorkspacePreset = createPreset({
       };
     }
 
+    workspaceInstallation.data.targets.jq.comments = [
+      '##############################################################################',
+      '#',
+      '# Workspace setup',
+      '#',
+      '##############################################################################',
+      ...(workspaceInstallation.data.targets.jq.comments ?? []),
+    ];
     appendTargets(targets, workspaceInstallation.data.targets, 'workspace_');
 
     targets['workspace_base'] = createTarget({
@@ -190,6 +198,18 @@ export const yarnWorkspacePreset = createPreset({
           `[preset:yarn-workspace] package ${p.dir} not handled: ${res.reason ?? '<unknown-reason>'}`,
         );
         continue;
+      }
+
+      const firstKey = Object.keys(res.data.targets)[0];
+      if (firstKey && res.data.targets[firstKey]) {
+        res.data.targets[firstKey].comments = [
+          '##############################################################################',
+          '#',
+          `# Package: ${p.packageJson.name}`,
+          '#',
+          '##############################################################################',
+          ...(res.data.targets[firstKey].comments ?? []),
+        ];
       }
 
       appendTargets(

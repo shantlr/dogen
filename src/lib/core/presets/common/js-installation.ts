@@ -191,7 +191,7 @@ export const jsInstallationPreset = createPreset({
 
     //#region Extract dependencies
     const targetExtractPkgDeps = createTarget({
-      comment: [
+      comments: [
         'Extract minimal fields for dependencies installation',
         'This step avoid reinstalling node_modules due to field that is unrelated',
       ],
@@ -213,7 +213,7 @@ export const jsInstallationPreset = createPreset({
 
     //#region Install node_modules
     const targetInstall = createTarget({
-      comment: ['Install node_modules'],
+      comments: ['Install node_modules'],
       from: dogenConfig.install?.from || targetNode,
       as: dogenConfig!.install!.target_name!,
       ops: [

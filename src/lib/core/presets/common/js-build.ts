@@ -156,7 +156,7 @@ export const jsBuildPreset = createPreset({
 
     //#region Build
     const targetBuild = createTarget({
-      comment: ['Build'],
+      comments: ['Build'],
       from: targetInstall,
       as: dogenConfig!.build!.target_name!,
       ops: [
@@ -263,7 +263,7 @@ export const jsBuildPreset = createPreset({
  *
  * @example
  * ```ts
- * const extendedInput = composeInput(
+ * const extendedInput = extendInput(
  *   input,
  *   { config: { default: { ... } } },
  * );
@@ -271,7 +271,7 @@ export const jsBuildPreset = createPreset({
  * return jsBuildPreset.run(extendedInput);
  * ```
  */
-export const composeInput = (
+export const extendInput = (
   input: JSBuildPresetInput,
   ...addons: Pick<
     JSBuildPresetInput,

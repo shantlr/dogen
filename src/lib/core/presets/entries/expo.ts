@@ -1,5 +1,5 @@
 import { packageHasDependency } from '../../../package-json';
-import { composeInput } from '../common/js-build';
+import { extendInput } from '../common/js-build';
 import { serveStaticJsBuildPreset } from '../common/serve-static-js-build';
 import { PresetInput } from '../types';
 import { createPreset } from '../utils/create-preset';
@@ -8,7 +8,7 @@ export const expoWebPreset = createPreset({
   name: 'dogen/js/expo-web',
   run: async (input: PresetInput<typeof serveStaticJsBuildPreset>) => {
     const res = await serveStaticJsBuildPreset.run(
-      composeInput(input, {
+      extendInput(input, {
         onProjectFound: ({ packageJson }) => {
           if (!packageHasDependency(packageJson, 'expo')) {
             return {

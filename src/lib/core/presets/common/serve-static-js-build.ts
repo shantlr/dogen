@@ -4,7 +4,7 @@ import { PresetInput } from '../types';
 import { createPreset } from '../utils/create-preset';
 import { createTarget } from '../utils/create-target';
 
-import { composeInput, jsBuildPreset } from './js-build';
+import { extendInput, jsBuildPreset } from './js-build';
 
 const NGINX_DEFAULT_CONF = `server {
   listen       80;
@@ -26,7 +26,7 @@ export const serveStaticJsBuildPreset = createPreset({
   name: 'dogen/js/serve-static-js-build',
   run: async (input: PresetInput<typeof jsBuildPreset>) => {
     const res = await jsBuildPreset.run(
-      composeInput(input, {
+      extendInput(input, {
         config: {
           default: {
             build: {
@@ -57,8 +57,8 @@ export const serveStaticJsBuildPreset = createPreset({
           ...targets,
           serve: createTarget({
             from: dogenConfig.serve!.from_image!,
-            as: 'serve',
-            comment: ['Serve built static files using a reverse proxy'],
+            as: dogenConfig.serve!.target_name!,
+            comments: ['Serve built static files using a reverse proxy'],
             ops: [
               {
                 type: 'COPY',

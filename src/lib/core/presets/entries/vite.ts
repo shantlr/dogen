@@ -1,5 +1,5 @@
 import { packageHasDependency } from '../../../package-json';
-import { composeInput } from '../common/js-build';
+import { extendInput } from '../common/js-build';
 import { serveStaticJsBuildPreset } from '../common/serve-static-js-build';
 import { PresetInput } from '../types';
 import { createPreset } from '../utils/create-preset';
@@ -8,7 +8,7 @@ export const vitePreset = createPreset({
   name: 'dogen/js/vite',
   run: async (input: PresetInput<typeof serveStaticJsBuildPreset>) => {
     return serveStaticJsBuildPreset.run(
-      composeInput(input, {
+      extendInput(input, {
         onProjectFound: ({ packageJson }) => {
           if (!packageHasDependency(packageJson, 'vite')) {
             return {

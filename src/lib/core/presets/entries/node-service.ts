@@ -1,4 +1,4 @@
-import { composeInput, jsBuildPreset } from '../common/js-build';
+import { extendInput, jsBuildPreset } from '../common/js-build';
 import { PresetInput } from '../types';
 import { createPreset } from '../utils/create-preset';
 import { createTarget } from '../utils/create-target';
@@ -7,13 +7,12 @@ export const nodeServicePreset = createPreset({
   name: 'dogen/js/node-service',
   run: async (input: PresetInput<typeof jsBuildPreset>) => {
     const res = await jsBuildPreset.run(
-      composeInput(input, {
+      extendInput(input, {
         onProjectFound: () => {
           return {
             config: {
               default: {
                 run: {
-                  target_name: 'service',
                   script: 'start',
                 },
               },
