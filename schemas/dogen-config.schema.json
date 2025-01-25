@@ -7,20 +7,19 @@
       "properties": {
         "from": {
           "type": "string",
-          "description": "base image/target to use"
+          "description": "base node image to use"
         },
         "version": {
           "type": "string",
-          "description": "node version to use. Ignored if `from` is provided"
+          "description": "node version to use. ignored if `from` is provided"
         },
         "setup_package_manager_version": {
           "type": "boolean",
           "description": "add package manager version setup"
         }
       },
-      "required": [
-        "from"
-      ]
+      "required": [],
+      "description": "node version configuration"
     },
     "target_prefix": {
       "type": "string"
@@ -41,7 +40,8 @@
           "description": "directory where to setup the project in the built image."
         }
       },
-      "required": []
+      "required": [],
+      "description": "container configuration"
     },
     "extract_deps": {
       "type": "object",
@@ -70,9 +70,8 @@
           "type": "string"
         }
       },
-      "required": [
-        "from"
-      ]
+      "required": [],
+      "description": "install modules configuration"
     },
     "build": {
       "type": "object",
@@ -277,7 +276,8 @@
           ]
         }
       },
-      "required": []
+      "required": [],
+      "description": "build configuration"
     },
     "run": {
       "type": "object",
@@ -295,7 +295,8 @@
           "type": "number"
         }
       },
-      "required": []
+      "required": [],
+      "description": "run configuration\nconfiguration used in case we are building a service like an api"
     },
     "serve": {
       "type": "object",
@@ -322,7 +323,8 @@
           "type": "number"
         }
       },
-      "required": []
+      "required": [],
+      "description": "serve configuration\nconfiguration used in case we building static content to be served behind a reverse proxy"
     }
   },
   "required": []

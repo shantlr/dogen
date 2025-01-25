@@ -26,18 +26,24 @@ const targetFromSchema = v.pipe(
 );
 
 export const dogenConfigBaseSchema = v.object({
-  node: v.optional(
-    v.object({
-      from: targetFromSchema,
-      version: v.pipe(
-        v.optional(v.string()),
-        v.description('node version to use. Ignored if `from` is provided'),
-      ),
-      setup_package_manager_version: v.pipe(
-        v.optional(v.boolean()),
-        v.description('add package manager version setup'),
-      ),
-    }),
+  node: v.pipe(
+    v.optional(
+      v.object({
+        from: v.pipe(
+          v.optional(v.string()),
+          v.description('base node image to use'),
+        ),
+        version: v.pipe(
+          v.optional(v.string()),
+          v.description('node version to use. ignored if `from` is provided'),
+        ),
+        setup_package_manager_version: v.pipe(
+          v.optional(v.boolean()),
+          v.description('add package manager version setup'),
+        ),
+      }),
+    ),
+    v.description('node version configuration'),
   ),
   target_prefix: v.optional(v.string()),
 
@@ -46,15 +52,18 @@ export const dogenConfigBaseSchema = v.object({
     v.description('package manager to use'),
   ),
 
-  container: v.optional(
-    v.object({
-      workdir: v.pipe(
-        v.optional(v.string()),
-        v.description(
-          'directory where to setup the project in the built image.',
+  container: v.pipe(
+    v.optional(
+      v.object({
+        workdir: v.pipe(
+          v.optional(v.string()),
+          v.description(
+            'directory where to setup the project in the built image.',
+          ),
         ),
-      ),
-    }),
+      }),
+    ),
+    v.description('container configuration'),
   ),
 
   extract_deps: v.optional(
@@ -64,65 +73,84 @@ export const dogenConfigBaseSchema = v.object({
     }),
   ),
 
-  install: v.optional(
-    v.object({
-      from: targetFromSchema,
-      target_name: v.pipe(v.optional(v.string()), v.description('target name')),
-      // keep_cache: v.optional(v.boolean()),
-      // npmrc: v.optional(v.union(v.string(), v.boolean())),
-      cmd: v.optional(v.string()),
-    }),
-  ),
-
-  build: v.optional(
-    v.object({
-      target_name: v.optional(v.string()),
-      cmd: v.nullish(v.string()),
-      script: v.nullish(v.union([v.string(), v.array(v.string())])),
-
-      output_dir: v.nullish(v.string()),
-
-      src_files: v.nullish(v.array(v.string())),
-      src_copy_from: v.nullish(v.array(copyFromSchema)),
-      src_additional_files: v.nullish(v.array(v.string())),
-      src_detect_additional_files: v.nullish(
-        v.array(
-          v.union([
-            v.string(),
-            v.object({
-              oneOf: v.array(v.string()),
-            }),
-          ]),
+  install: v.pipe(
+    v.optional(
+      v.object({
+        from: v.optional(targetFromSchema),
+        target_name: v.pipe(
+          v.optional(v.string()),
+          v.description('target name'),
         ),
-      ),
-
-      post_files: v.nullish(v.array(v.string())),
-      post_additional_files: v.nullish(v.array(v.string())),
-      post_detect_additional_files: v.nullish(v.array(v.string())),
-      post_copy_from: v.nullish(v.array(copyFromSchema)),
-    }),
+        // keep_cache: v.optional(v.boolean()),
+        // npmrc: v.optional(v.union(v.string(), v.boolean())),
+        cmd: v.optional(v.string()),
+      }),
+    ),
+    v.description('install modules configuration'),
   ),
 
-  run: v.optional(
-    v.object({
-      target_name: v.optional(v.string()),
-      cmd: v.optional(v.string()),
-      script: v.optional(v.string()),
-      expose: v.optional(v.number()),
-    }),
+  build: v.pipe(
+    v.optional(
+      v.object({
+        target_name: v.optional(v.string()),
+        cmd: v.nullish(v.string()),
+        script: v.nullish(v.union([v.string(), v.array(v.string())])),
+
+        output_dir: v.nullish(v.string()),
+
+        src_files: v.nullish(v.array(v.string())),
+        src_copy_from: v.nullish(v.array(copyFromSchema)),
+        src_additional_files: v.nullish(v.array(v.string())),
+        src_detect_additional_files: v.nullish(
+          v.array(
+            v.union([
+              v.string(),
+              v.object({
+                oneOf: v.array(v.string()),
+              }),
+            ]),
+          ),
+        ),
+
+        post_files: v.nullish(v.array(v.string())),
+        post_additional_files: v.nullish(v.array(v.string())),
+        post_detect_additional_files: v.nullish(v.array(v.string())),
+        post_copy_from: v.nullish(v.array(copyFromSchema)),
+      }),
+    ),
+    v.description('build configuration'),
   ),
 
-  serve: v.optional(
-    v.object({
-      from_image: v.optional(v.string()),
-      config: v.optional(v.string()),
-      config_dst: v.optional(v.string()),
+  run: v.pipe(
+    v.optional(
+      v.object({
+        target_name: v.optional(v.string()),
+        cmd: v.optional(v.string()),
+        script: v.optional(v.string()),
+        expose: v.optional(v.number()),
+      }),
+    ),
+    v.description(
+      'run configuration\nconfiguration used in case we are building a service like an api',
+    ),
+  ),
 
-      target_name: v.optional(v.string()),
-      cmd: v.optional(v.string()),
-      script: v.optional(v.string()),
-      expose: v.optional(v.number()),
-    }),
+  serve: v.pipe(
+    v.optional(
+      v.object({
+        from_image: v.optional(v.string()),
+        config: v.optional(v.string()),
+        config_dst: v.optional(v.string()),
+
+        target_name: v.optional(v.string()),
+        cmd: v.optional(v.string()),
+        script: v.optional(v.string()),
+        expose: v.optional(v.number()),
+      }),
+    ),
+    v.description(
+      'serve configuration\nconfiguration used in case we building static content to be served behind a reverse proxy',
+    ),
   ),
 });
 
