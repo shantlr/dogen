@@ -99,31 +99,63 @@ async function detectPackageManager({
 }): Promise<{
   name: PackageManagerName;
   version?: string;
+  from?: string;
 }> {
   if (packageJson.packageManager) {
     if (packageJson.packageManager.startsWith('yarn@4.')) {
       return {
         name: 'yarn@4',
         version: packageJson.packageManager.split('@')[1],
+        from: `package.json 'packageManager' field`,
       };
     }
     if (packageJson.packageManager.startsWith('yarn@')) {
       return {
         name: 'yarn@1',
         version: packageJson.packageManager.split('@')[1],
+        from: `package.json 'packageManager' field`,
       };
     }
+
+    throw new Error(`Unhandled package manager: ${packageJson.packageManager}`);
   }
 
   if (await isFileExists(path.resolve(dir, '.yarnrc.yml'))) {
-    return { name: 'yarn@4' };
+    return {
+      name: 'yarn@4',
+      from: '.yarnrc.yml presence',
+    };
   }
   if (await isFileExists(path.resolve(dir, 'yarn.lock'))) {
-    return { name: 'yarn@1' };
+    try {
+      const { stdout } = await execa({
+        cwd: dir,
+      })`yarn --version`;
+      const match = stdout.match(/(?<version>\d+\.\d+\.\d+)/);
+      if (match?.groups?.version.startsWith('1.')) {
+        return {
+          name: 'yarn@1',
+          version: match.groups.version,
+          from: 'yarn --version',
+        };
+      } else if (match?.groups?.version.startsWith('4.')) {
+        return {
+          name: 'yarn@4',
+          version: match.groups.version,
+          from: 'yarn --version',
+        };
+      }
+    } catch {
+      //
+    }
+    return {
+      name: 'yarn@1',
+      from: 'yarn.lock presence',
+    };
   }
 
   if (await isFileExists(path.resolve(dir, 'package-npm.lock'))) {
-    return { name: 'npm' };
+    return { name: 'npm', from: 'package-npm.lock presence' };
   }
 
   throw new Error(`Unable to detect used package manager at '${dir}'`);
