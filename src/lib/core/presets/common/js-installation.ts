@@ -90,6 +90,7 @@ const getPackageManager = ({
 
   throw new Error(`Unknown package manager: ${name}`);
 };
+
 async function detectPackageManager({
   dir,
   packageJson,
@@ -120,12 +121,6 @@ async function detectPackageManager({
     throw new Error(`Unhandled package manager: ${packageJson.packageManager}`);
   }
 
-  if (await isFileExists(path.resolve(dir, '.yarnrc.yml'))) {
-    return {
-      name: 'yarn@4',
-      from: '.yarnrc.yml presence',
-    };
-  }
   if (await isFileExists(path.resolve(dir, 'yarn.lock'))) {
     try {
       const { stdout } = await execa({

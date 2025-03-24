@@ -23,6 +23,9 @@ export const viteNodePreset = createPreset({
                 build: {
                   src_detect_additional_files: [
                     'vite.config.ts',
+                    'vite.config.mts',
+                    'vite.config.js',
+                    'vite.config.mjs',
                     'vite-env.d.ts',
                     'src',
                   ],
